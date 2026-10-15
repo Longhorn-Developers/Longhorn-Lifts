@@ -28,7 +28,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>surewalk</string>
-				<string>dev.longhorns.LonghornLifts</string>
+				<string>org.longhorndevelopers.longhornlifts</string>
 			</array>
 		</dict>
 		<dict>

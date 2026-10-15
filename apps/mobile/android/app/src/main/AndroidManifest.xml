@@ -28,7 +28,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="surewalk"/>
-        <data android:scheme="dev.longhorns.LonghornLifts"/>
+        <data android:scheme="org.longhorndevelopers.longhornlifts"/>
         <data android:scheme="exp+longhorn-lifts"/>
       </intent-filter>
     </activity>

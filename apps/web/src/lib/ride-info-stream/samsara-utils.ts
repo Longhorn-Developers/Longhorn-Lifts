@@ -287,6 +287,29 @@ const getVehicleFromDriver = async (driverID: string) => {
   return res;
 };
 
+const getDriverFromVehicle = async (vehicleID: string) => {
+  const res = await retry(
+    async () =>
+      await samsaraClient.driverVehicleAssignments.getDriverVehicleAssignments({
+        filterBy: "vehicles",
+        vehicleIds: vehicleID,
+        assignmentType: "HOS",
+      }),
+  );
+  return res;
+};
+
+const sendMessageToDriver = async (driverID: string, text: string) => {
+  const res = await retry(
+    async () =>
+      await samsaraClient.messages.v1CreateMessages({
+        driverIds: [Number.parseInt(driverID)],
+        text,
+      }),
+  );
+  return res;
+};
+
 export {
   cancelRide,
   createRoute,
@@ -294,6 +317,7 @@ export {
   getAsset,
   getAssetLocations,
   getCurrentWaitTime,
+  getDriverFromVehicle,
   getFormSubmission,
   getRideName,
   getRoute,
@@ -302,4 +326,5 @@ export {
   getVehicleLocations,
   missRide,
   samsaraClient,
+  sendMessageToDriver,
 };

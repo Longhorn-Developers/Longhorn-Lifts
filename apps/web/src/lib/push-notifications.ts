@@ -2,6 +2,11 @@ import InProgressRideState from "@sure-walk/utils/types/in-progress-ride-state";
 import Location from "@sure-walk/utils/types/location";
 import VehicleInfoShort from "@sure-walk/utils/types/vehicle-info-short";
 import {
+  WorkflowEntrypoint,
+  WorkflowEvent,
+  WorkflowStep,
+} from "cloudflare:workers";
+import {
   ExpoPushMessage,
   ExpoPushReceipt,
   ExpoPushTicket,
@@ -22,22 +27,22 @@ const createRouteUpdatePayload = ({
 }): ExpoPushMessage => {
   const messages = {
     assigned: {
-      title: "Driver assigned!",
-      body: "Your ride has been assigned a driver! They will be headed towards you soon.",
+      title: "Your ride has a driver",
+      body: "Your ride has been assigned a driver. They will be headed towards you soon.",
     },
     "en route": {
-      title: "Your ride is on the way!",
-      body: "Your Sure Walk is heading towards you now! Start packing your things.",
+      title: "Your ride is on the way",
+      body: "Get ready and start heading to your pickup location.",
     },
     arrived: {
-      title: "Your ride has arrived!",
-      body: "Your Sure Walk has arrived at the pickup location. You have 2 minutes before they leave.",
+      title: "Your ride has arrived",
+      body: "Meet your ride at your pickup location. You have 2 minutes before they leave.",
     },
   };
 
   const { title, body } = messages[rideState];
   const data = {
-    route: `/home/ride-info-wrapper${!isLeader ? `?shareCode=${shareCode}` : ""}`,
+    route: `/home/current-ride-info${!isLeader ? `?shareCode=${shareCode}` : ""}`,
     rideState,
     eventType: "routeUpdate",
   };
@@ -71,7 +76,7 @@ const createVehicleInfoPayload = ({
   const body = `Look out for a ${vehicleInfo.name}${vehicleInfo.licensePlate ? `, with the license plate ${vehicleInfo.licensePlate}` : ""}.`;
 
   const data = {
-    route: `/home/ride-info-wrapper${!isLeader ? `?shareCode=${shareCode}` : ""}`,
+    route: `/home/current-ride-info${!isLeader ? `?shareCode=${shareCode}` : ""}`,
     vehicleInfo,
     eventType: "vehicleInfo",
   };
@@ -99,14 +104,39 @@ const createMissedRidePayload = ({
   pushToken: string;
   rideID: string;
 }): ExpoPushMessage => {
-  const title = "Missed your ride?";
-  const body =
-    "Your ride was missed. If you still need one, please make a new ride request.";
+  const title = "You missed your ride";
+  const body = "Your ride has left. Please request a new ride.";
 
   const data = {
     eventType: "missedRide",
     pickupLocation,
     dropoffLocation,
+  };
+
+  return {
+    title,
+    body,
+    data,
+    to: pushToken,
+    priority: "high",
+    interruptionLevel: "time-sensitive",
+    threadId: rideID,
+    channelId: "default",
+  };
+};
+
+const createCancelledRidePayload = ({
+  pushToken,
+  rideID,
+}: {
+  pushToken: string;
+  rideID: string;
+}): ExpoPushMessage => {
+  const title = "Ride cancelled";
+  const body = "Your ride was cancelled by the group leader.";
+
+  const data = {
+    eventType: "rideCancelled",
   };
 
   return {
@@ -306,6 +336,27 @@ export const sendMissedRideNotification = async ({
   return sendMessages(messages);
 };
 
+export const sendCancelledRideNotification = async ({
+  pushTokens,
+  rideID,
+  isLeader,
+}: {
+  pushTokens: string[];
+  rideID: string;
+  isLeader: boolean[];
+}) => {
+  const messages = pushTokens
+    .filter((_, i) => !isLeader[i])
+    .map((pushToken) =>
+      createCancelledRidePayload({
+        pushToken,
+        rideID,
+      }),
+    );
+
+  return sendMessages(messages);
+};
+
 export const sendRideFeedbackNotification = async ({
   pushTokens,
   rideID,
@@ -322,3 +373,15 @@ export const sendRideFeedbackNotification = async ({
 
   return sendMessages(messages);
 };
+
+export class PushReceiptsWorkflow extends WorkflowEntrypoint<CloudflareEnv> {
+  async run(event: WorkflowEvent<unknown>, step: WorkflowStep) {
+    if (event.schedule || (event.payload as { schedule?: boolean }).schedule) {
+      await step.do("fetch-push-receipts", async () => {
+        const doID = this.env.RIDE_INFO_STREAM.idFromName("global");
+        const stub = this.env.RIDE_INFO_STREAM.get(doID);
+        await stub.fetchPushReceipts();
+      });
+    }
+  }
+}

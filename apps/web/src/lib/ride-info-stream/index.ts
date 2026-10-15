@@ -11,6 +11,7 @@ import { users } from "../db/schema/users";
 import { Vehicle, vehicles } from "../db/schema/vehicles";
 import {
   fetchPushReceipts,
+  sendCancelledRideNotification,
   sendMissedRideNotification,
   sendRideFeedbackNotification,
   sendRouteUpdateNotification,
@@ -664,12 +665,23 @@ export class RideInfoStream extends DurableObject<CloudflareEnv> {
     return result;
   }
 
-  async afterCancelRide(rideID: string): Promise<void> {
+  async afterCancelRide(
+    ride: Exclude<Awaited<ReturnType<typeof getActiveRideByUserID>>, undefined>,
+  ): Promise<void> {
     // called from the Next.js worker, make sure to disconnect all connections
     this.streams
-      .get(rideID)
+      .get(ride.id)
       ?.forEach((ws) => ws.close(1000, "Ride cancelled."));
-    this.streams.delete(rideID);
-    this.clearSubscribers(rideID);
+    this.streams.delete(ride.id);
+    const subscribers = this.getSubscribers(ride.id);
+    if (subscribers) {
+      const res = await sendCancelledRideNotification({
+        pushTokens: subscribers.pushTokens,
+        rideID: ride.id,
+        isLeader: subscribers.isLeader,
+      });
+      this.addPushTickets(res);
+    }
+    this.clearSubscribers(ride.id);
   }
 }

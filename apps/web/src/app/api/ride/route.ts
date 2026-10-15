@@ -14,7 +14,14 @@ import {
   getActiveRideByUserID,
   getInProgressRideStateFromRide,
 } from "@/lib/ride-info-stream/ride-helper";
-import { cancelRide, createRoute } from "@/lib/ride-info-stream/samsara-utils";
+import {
+  cancelRide,
+  createRoute,
+  getDriverFromVehicle,
+  getRideName,
+  getRoute,
+  sendMessageToDriver,
+} from "@/lib/ride-info-stream/samsara-utils";
 
 let initialized = false;
 
@@ -191,10 +198,22 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
+  const route = await getRoute(currentRide.samsaraID);
+  let driverID = route.data?.driver?.id;
+  if (!driverID && route.data?.vehicle?.id) {
+    const assignment = await getDriverFromVehicle(route.data.vehicle.id);
+    if (assignment.data && assignment.data.length > 0) {
+      driverID = assignment.data[0].driver.id;
+    }
+  }
   const doID = env.RIDE_INFO_STREAM.idFromName("global");
   const stub = env.RIDE_INFO_STREAM.get(doID);
   await cancelRide(currentRide, user);
-  await stub.afterCancelRide(currentRide.id);
+  await stub.afterCancelRide(currentRide);
+  if (driverID) {
+    const rideName = getRideName(currentRide.user, currentRide.members);
+    await sendMessageToDriver(driverID, `The "${rideName}" was cancelled.`);
+  }
 
   return NextResponse.json(
     { message: "Ride cancelled.", rideIDForFeedback: currentRide.id },

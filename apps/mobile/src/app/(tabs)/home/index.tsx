@@ -341,7 +341,7 @@ const Home = () => {
   useEffect(() => {
     if (
       lastNotificationResponse &&
-      lastNotificationResponse.notification.request.content.data.route &&
+      lastNotificationResponse.notification.request.content.data.eventType &&
       lastNotificationResponse.actionIdentifier ===
         Notifications.DEFAULT_ACTION_IDENTIFIER
     ) {

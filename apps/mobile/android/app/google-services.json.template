@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:857267087251:android:aa03f29b6f2655dd7cea66",
         "android_client_info": {
-          "package_name": "dev.longhorns.LonghornLifts"
+          "package_name": "org.longhorndevelopers.longhornlifts"
         }
       },
       "oauth_client": [],
