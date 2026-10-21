@@ -6,7 +6,7 @@ import { generateAccessToken, generateRefreshToken } from "@/lib/auth";
 import { getDB } from "@/lib/db";
 import { accounts } from "@/lib/db/schema/accounts";
 import { codes } from "@/lib/db/schema/codes";
-import { User, users } from "@/lib/db/schema/users";
+import { users } from "@/lib/db/schema/users";
 
 const codeFormat = z.object({
   code: z.string().length(6, "Code must be 6 characters long."),
@@ -45,13 +45,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let user: User;
-
   await getDB().delete(codes).where(eq(codes.id, result.codes!.id));
-  await getDB()
+  let [user] = await getDB()
     .update(users)
     .set({ phoneNumber: result.codes!.identifier })
-    .where(eq(users.id, result.users!.id));
+    .where(eq(users.id, result.users!.id))
+    .returning();
   if (result.codes.newFirstName) {
     [user] = await getDB()
       .update(users)
@@ -64,8 +63,6 @@ export async function POST(request: NextRequest) {
       })
       .where(eq(users.id, result.users!.id))
       .returning();
-  } else {
-    user = result.users!;
   }
 
   const accessToken = generateAccessToken(result.accounts!);
