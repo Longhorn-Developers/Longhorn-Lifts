@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { useSearchParams } from "expo-router/build/hooks";
 import * as SecureStore from "expo-secure-store";
 import {
-  CarSimpleIcon,
+  CarIcon,
   CircleIcon,
   CopyIcon,
   MapPinIcon,
@@ -94,6 +94,7 @@ const CurrentRideInfo = () => {
   ) as SharedValue<(string | number)[]>;
 
   const connect = (onConnect = () => {}) => {
+    setTimeout(() => SplashScreen.hideAsync(), 5000); // if connecting takes a while unhide the splash screen eventually
     const wsURL = new URL(API_URL.replace("http", "ws"));
     const accessToken = SecureStore.getItem("accessToken");
     wsURL.pathname = "/api/ride/events";
@@ -110,6 +111,7 @@ const CurrentRideInfo = () => {
       const payload = JSON.parse(event.data) as RideEvent<object>;
       switch (payload.eventType) {
         case "connected": {
+          SplashScreen.hideAsync();
           const data = payload.data as CurrentRideSmall;
           setRideDetails(data);
           if (!shareCode) {
@@ -464,10 +466,10 @@ const CurrentRideInfo = () => {
               tracksViewChanges={true}
             >
               <View
-                className="bg-white rounded-full items-center justify-center w-[44px] h-[44px]"
+                className="bg-ut-bluebonnet rounded-full items-center justify-center w-[40px] h-[40px]"
                 style={{ boxShadow: "0px 4px 10px rgba(100, 100, 100, 0.2)" }}
               >
-                <CarSimpleIcon color={"#000"} size={32} weight="fill" />
+                <CarIcon color={"#fff"} size={22} weight="fill" />
               </View>
             </Marker>
           </MapView>

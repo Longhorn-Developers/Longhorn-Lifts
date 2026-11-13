@@ -1,4 +1,4 @@
-package dev.longhorns.LonghornLifts
+package org.longhorndevelopers.longhornlifts
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -1,11 +1,14 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
-  ArrowUpRightIcon,
-  ArrowUUpLeftIcon,
+  ArrowSquareOutIcon,
+  BugIcon,
   CaretLeftIcon,
   CaretRightIcon,
-  PencilIcon,
+  ClipboardTextIcon,
+  MoonIcon,
+  PencilSimpleIcon,
+  QuestionIcon,
 } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { Linking, ScrollView, TouchableOpacity, View } from "react-native";
@@ -17,17 +20,18 @@ import EditProfileTextInput from "@/src/components/edit-profile-text-input";
 import FontText from "@/src/components/font-text";
 import LargeButton from "@/src/components/large-button";
 import OutlineButton from "@/src/components/outline-button";
-import { slate700, UTBluebonnet } from "@/src/utils/colors";
+import { slate700, UTBurntOrange } from "@/src/utils/colors";
 import { usePushNotificationsContext } from "@/src/utils/context/push-notifications-context";
+import { useToastContext } from "@/src/utils/context/toast-context";
 import { useSession } from "@/src/utils/context/user-context";
 
 const Profile = () => {
   const { user, logOut, setUser } = useSession();
   const { pushToken } = usePushNotificationsContext();
+  const { setToast } = useToastContext();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [eid, setEid] = useState("");
@@ -56,7 +60,6 @@ const Profile = () => {
     setLastName(user.lastName);
     setEid(user.eid ?? "");
     setRequiresAssistance(user.requiresAssistance);
-    setErrorMessage(null);
   };
 
   const saveProfile = async () => {
@@ -68,18 +71,25 @@ const Profile = () => {
     const trimmedLastName = lastName.trim();
     const trimmedEid = eid.trim();
 
+    const showError = (description: string) =>
+      setToast({
+        title: "Error",
+        description,
+        onDismiss: () => setToast(null),
+        isError: true,
+      });
+
     if (!trimmedFirstName || !trimmedLastName) {
-      setErrorMessage("First and last name are required.");
+      showError("First and last name are required.");
       return;
     }
 
     if (trimmedEid && trimmedEid.length < 4) {
-      setErrorMessage("UT EID must be at least 4 characters.");
+      showError("UT EID must be at least 4 characters.");
       return;
     }
 
     setIsSaving(true);
-    setErrorMessage(null);
 
     try {
       const response = await api.patch("/me", {
@@ -90,8 +100,7 @@ const Profile = () => {
       });
 
       if (!ok(response)) {
-        const error = getErrorMessage(response);
-        setErrorMessage(error);
+        showError(getErrorMessage(response));
         return;
       }
 
@@ -100,10 +109,25 @@ const Profile = () => {
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
-      setErrorMessage("Unable to update your profile right now.");
+      showError("Unable to update your profile right now.");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const formatPhoneNumber = (phone: any): string => {
+    if (!phone) return phone;
+    const hasPlus = phone.startsWith("+");
+    const digits = phone.replace(/\D/g, "");
+    if (hasPlus && digits.length > 10) {
+      const countryCode = digits.slice(0, digits.length - 10);
+      const local = digits.slice(-10);
+      return `+${countryCode} (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
+    }
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    return phone;
   };
 
   return (
@@ -119,11 +143,13 @@ const Profile = () => {
             <CaretLeftIcon size={24} color={slate700} />
           </TouchableOpacity>
           <View className="w-full bg-[#EFF6FF] pt-safe-offset-[54px]" />
-          <View className="text-center w-20 h-20 rounded-full bg-ut-burntorange items-center justify-center self-center -mt-10">
-            <FontText className="text-center text-white text-[24px] font-medium">
-              {user.firstName[0]}
-              {user.lastName[0]}
-            </FontText>
+          <View className="w-24 h-24 rounded-full bg-slate-50 border border-slate-200 items-center justify-center self-center -mt-11">
+            <View className="w-20 h-20 rounded-full bg-ut-burntorange items-center justify-center">
+              <FontText className="text-center text-white text-[24px] font-medium">
+                {user.firstName[0]}
+                {user.lastName[0]}
+              </FontText>
+            </View>
           </View>
           <FontText className="text-[24px] tracking-[-0.24px] text-center mt-4">
             {user.firstName} {user.lastName}
@@ -138,7 +164,7 @@ const Profile = () => {
                     setIsEditing(true);
                   }}
                 >
-                  <PencilIcon size={20} />
+                  <PencilSimpleIcon size={20} />
                   <FontText className="text-center text-[16px] tracking-[-0.16px]">
                     Edit Profile
                   </FontText>
@@ -203,7 +229,7 @@ const Profile = () => {
                         Phone Number
                       </FontText>
                       <FontText className="mt-4 mb-1 text-lg">
-                        {user.phoneNumber}
+                        {formatPhoneNumber(user.phoneNumber)}
                       </FontText>
                       <View className="border-b border-b-[#e5e7eb] w-full" />
                     </View>
@@ -216,52 +242,69 @@ const Profile = () => {
                       </FontText>
                       <View className="border-b border-b-[#e5e7eb] w-full" />
                     </View>
-                    <View className="flex flex-col items-start self-stretch h-[55px]">
-                      <FontText className="font-medium text-lg">
-                        Guidelines
-                      </FontText>
+                    <View className="flex flex-col self-stretch gap-6">
+                      <View className="flex flex-col self-stretch">
+                        <FontText className="font-semibold text-2xl text-slate-900">
+                          Resources
+                        </FontText>
+                        <View className="border-b border-slate-200 w-full mt-4" />
+                      </View>
                       <TouchableOpacity
-                        className="flex-row mt-4 mb-1 items-center justify-between w-full"
+                        className="flex-row items-center justify-between w-full"
                         onPress={() => router.push("/profile/guidelines")}
                       >
-                        <FontText className="text-lg">
-                          View all Sure Walk guidelines
-                        </FontText>
-                        <CaretRightIcon size={24} />
+                        <View className="flex-row items-center gap-2">
+                          <ClipboardTextIcon size={24} color={UTBurntOrange} />
+                          <FontText className="font-semibold text-lg text-slate-900">
+                            Guidelines
+                          </FontText>
+                        </View>
+                        <CaretRightIcon size={24} color={slate700} />
                       </TouchableOpacity>
-                      <View className="border-b border-b-[#e5e7eb] w-full" />
-                    </View>
-                    <View className="flex flex-col items-start self-stretch h-[55px]">
-                      <FontText className="font-medium text-lg">FAQs</FontText>
+                      <View className="border-b border-slate-200 w-full" />
                       <TouchableOpacity
-                        className="flex-row mt-4 mb-1 items-center justify-between w-full"
+                        className="flex-row items-center justify-between w-full"
                         onPress={() => router.push("/profile/faqs")}
                       >
-                        <FontText className="text-lg">
-                          View frequently asked questions
-                        </FontText>
-                        <CaretRightIcon size={24} />
+                        <View className="flex-row items-center gap-2">
+                          <QuestionIcon size={24} color={UTBurntOrange} />
+                          <FontText className="font-semibold text-lg text-slate-900">
+                            FAQs
+                          </FontText>
+                        </View>
+                        <CaretRightIcon size={24} color={slate700} />
                       </TouchableOpacity>
-                      <View className="border-b border-b-[#e5e7eb] w-full" />
-                    </View>
-                    <View className="flex flex-col items-start self-stretch h-[55px]">
-                      <FontText className="font-medium text-lg">
-                        UT Night Rides
-                      </FontText>
+                      <View className="border-b border-slate-200 w-full" />
                       <TouchableOpacity
-                        className="flex-row mt-4 mb-1 items-center justify-between w-full"
+                        className="flex-row items-center justify-between w-full"
+                        onPress={() => {}}
+                      >
+                        <View className="flex-row items-center gap-2">
+                          <BugIcon size={24} color={UTBurntOrange} />
+                          <FontText className="font-semibold text-lg text-slate-900">
+                            Report A Bug
+                          </FontText>
+                        </View>
+                        <CaretRightIcon size={24} color={slate700} />
+                      </TouchableOpacity>
+                      <View className="border-b border-slate-200 w-full" />
+                      <TouchableOpacity
+                        className="flex-row items-center justify-between w-full"
                         onPress={() =>
                           Linking.openURL(
                             "https://parking.utexas.edu/transportation/ut-night-rides",
                           )
                         }
                       >
-                        <FontText className="text-lg">
-                          Redeem Lyft credit
-                        </FontText>
-                        <ArrowUpRightIcon size={24} />
+                        <View className="flex-row items-center gap-2">
+                          <MoonIcon size={24} color={UTBurntOrange} />
+                          <FontText className="font-semibold text-lg text-slate-900">
+                            UT Night Rides
+                          </FontText>
+                        </View>
+                        <ArrowSquareOutIcon size={24} color={slate700} />
                       </TouchableOpacity>
-                      <View className="border-b border-b-[#e5e7eb] w-full" />
+                      <View className="border-b border-slate-200 w-full" />
                     </View>
                     <View className="pb-2 pt-6 w-full mb-safe">
                       <OutlineButton
@@ -272,7 +315,7 @@ const Profile = () => {
                   </View>
                 )}
                 {isEditing && (
-                  <View className="flex-1 flex-col mt-[49px] pt-4 px-5">
+                  <View className="flex-1 flex-col pt-4 px-5">
                     <View className="flex flex-col items-start gap-10 mb-5">
                       <EditProfileTextInput
                         fieldName="First Name"
@@ -302,7 +345,7 @@ const Profile = () => {
                       />
                       <EditProfileTextInput
                         fieldName="Phone Number"
-                        value={phoneNumber}
+                        value={formatPhoneNumber(phoneNumber)}
                         keyboardType="phone-pad"
                         autoComplete="tel"
                         maxLength={20}
@@ -320,28 +363,30 @@ const Profile = () => {
                         ]}
                       />
                     </View>
-                    {errorMessage && <FontText>{errorMessage}</FontText>}
                   </View>
                 )}
               </ScrollView>
             </View>
             {isEditing && (
-              <View className="flex-row gap-2 mt-4 mb-safe">
-                <View className="pb-2 flex-1">
+              <View className="flex-row gap-2 mt-4 mb-safe justify-end">
+                <View className="pb-2">
                   <OutlineButton
                     title="Cancel"
                     onPress={() => {
                       resetForm();
                       setIsEditing(false);
                     }}
-                    icon={<ArrowUUpLeftIcon color={UTBluebonnet} size={24} />}
+                    small
+                    red
                   />
                 </View>
-                <View className="pb-2 flex-1">
+                <View className="pb-2">
                   <LargeButton
                     title={isSaving ? "Saving..." : "Save"}
                     onPress={saveProfile}
                     disabled={isSaving || requiresAssistance === null}
+                    small
+                    blue
                   />
                 </View>
               </View>

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
-import { hashToken } from "@/lib/auth";
+import { hashString } from "@/lib/auth";
 import { getDB } from "@/lib/db";
 import { refreshTokens } from "@/lib/db/schema/refresh-tokens";
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   const { refreshToken, pushToken } = validationResult.data;
   await getDB()
     .delete(refreshTokens)
-    .where(eq(refreshTokens.hash, hashToken(refreshToken)));
+    .where(eq(refreshTokens.hash, hashString(refreshToken)));
 
   if (pushToken) {
     const { env } = getCloudflareContext();

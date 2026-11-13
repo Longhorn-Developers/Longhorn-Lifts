@@ -32,6 +32,14 @@ const ConfirmRide = () => {
 
   const [confirmEnabled, setConfirmEnabled] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [layoutHeight, setLayoutHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(5000);
+
+  useEffect(() => {
+    if (contentHeight < layoutHeight) {
+      setConfirmEnabled(true);
+    }
+  }, [layoutHeight, contentHeight]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
@@ -126,6 +134,13 @@ const ConfirmRide = () => {
         <ScrollView
           className="flex-col py-4 pt-[-16px] px-5"
           onMomentumScrollEnd={handleScroll}
+          onLayout={(e) => {
+            setLayoutHeight(e.nativeEvent.layout.height);
+          }}
+          onContentSizeChange={(_, height) => {
+            setContentHeight(height);
+          }}
+          overScrollMode="always"
         >
           <View className="flex-col gap-6 flex-1 mt-4">
             {/* location info */}

@@ -84,7 +84,6 @@ export const PushNotificationsProvider = ({ children }: PropsWithChildren) => {
           projectId,
         })
       ).data;
-      console.log(pushTokenString);
       setPushToken(pushTokenString);
       setRegistrationError(null);
       setLoadingState("done");

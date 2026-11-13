@@ -1523,3 +1523,10 @@ export const getMatchingPickupLocations = (query: string) => {
       (loc.abbreviation ?? "").toLowerCase().includes(lowerQuery),
   );
 };
+
+export const sortFavoriteLocations = (a: Location, b: Location) => {
+  if (a.type != b.type) {
+    return a.type === "dropoff" ? -1 : 1;
+  }
+  return a.name.localeCompare(b.name);
+};

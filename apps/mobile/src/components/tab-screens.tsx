@@ -37,7 +37,8 @@ import LargeButton from "./large-button";
 const TabScreens = () => {
   const { loadingState, user, guidelinesAccepted, fetchUserInfo } =
     useSession();
-  const { loadingState: rideLoadingState } = useCurrentRideSession();
+  const { loadingState: rideLoadingState, currentRide } =
+    useCurrentRideSession();
   const {
     loadingState: notificationsLoadingState,
     registerForPushNotificationsAsync,
@@ -67,16 +68,17 @@ const TabScreens = () => {
         .data as unknown as RideUpdateNotification;
       // @ts-ignore
       if (data.route) {
-        router.push(data.route as unknown as RelativePathString);
+        router.navigate(data.route as unknown as RelativePathString);
       }
     }
     if (eventType === "rideFeedback") {
       Notifications.clearLastNotificationResponseAsync();
       const data = response.notification.request.content.data;
-      router.push(data.route);
+      router.navigate(data.route);
     }
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     registerForPushNotificationsAsync();
     const responseListener =
@@ -87,7 +89,7 @@ const TabScreens = () => {
     return () => {
       responseListener.remove();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (
@@ -98,7 +100,7 @@ const TabScreens = () => {
     ) {
       onNotificationResponseReceieved(lastNotificationResponse);
     }
-  }, [lastNotificationResponse]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lastNotificationResponse]);
 
   useEffect(() => {
     if (
@@ -107,7 +109,11 @@ const TabScreens = () => {
       notificationsLoadingState !== "loading" &&
       (loaded || error)
     ) {
-      setTimeout(() => SplashScreen.hideAsync(), 200);
+      if (currentRide) {
+        router.navigate("/home/current-ride-info");
+      } else {
+        setTimeout(() => SplashScreen.hideAsync(), 200);
+      }
     }
   }, [
     loadingState,
@@ -116,6 +122,7 @@ const TabScreens = () => {
     loaded,
     error,
   ]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   if (
     loadingState === "loading" ||

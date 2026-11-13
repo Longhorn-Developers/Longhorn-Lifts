@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'dev.longhorns.LonghornLifts'
+    namespace 'org.longhorndevelopers.longhornlifts'
     defaultConfig {
-        applicationId 'dev.longhorns.LonghornLifts'
+        applicationId 'org.longhorndevelopers.longhornlifts'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

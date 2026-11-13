@@ -10,7 +10,7 @@ import { refreshTokens } from "./db/schema/refresh-tokens";
 export const ACCESS_TOKEN_TTL = "15m";
 export const REFRESH_TOKEN_TTL = "30d";
 
-export const hashToken = (token: string) => {
+export const hashString = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");
 };
 
@@ -31,7 +31,7 @@ export const generateRefreshToken = async (account: Account) => {
   const token = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET!, {
     expiresIn: REFRESH_TOKEN_TTL,
   });
-  const hash = hashToken(token);
+  const hash = hashString(token);
   await getDB().insert(refreshTokens).values({
     jti,
     accountID: account.id,
@@ -75,7 +75,7 @@ export const verifyRefreshToken = async (token: string) => {
       accountID: string;
       jti: string;
     };
-    const hash = hashToken(token);
+    const hash = hashString(token);
     const { refreshToken, account } = await getDB()
       .select()
       .from(refreshTokens)

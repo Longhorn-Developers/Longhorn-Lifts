@@ -13,7 +13,7 @@ const config = ({ _config }: { _config: ExpoConfig }) => ({
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "dev.longhorns.LonghornLifts",
+    bundleIdentifier: "org.longhorndevelopers.longhornlifts",
     config: {
       usesNonExemptEncryption: false,
     },
@@ -33,7 +33,7 @@ const config = ({ _config }: { _config: ExpoConfig }) => ({
       monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
       backgroundColor: "#ffffff",
     },
-    package: "dev.longhorns.LonghornLifts",
+    package: "org.longhorndevelopers.longhornlifts",
     permissions: [
       "android.permission.ACCESS_FINE_LOCATION",
       "android.permission.ACCESS_COARSE_LOCATION",

@@ -1,4 +1,4 @@
-package dev.longhorns.LonghornLifts
+package org.longhorndevelopers.longhornlifts
 
 import android.app.Application
 import android.content.res.Configuration

@@ -3,7 +3,7 @@
   "main": "custom-worker.ts",
   "name": "lifts-web",
   // Set this to today's date
-  "compatibility_date": "2026-07-16",
+  "compatibility_date": "2026-10-11",
   "compatibility_flags": ["nodejs_compat", "disable_nodejs_console_module"],
   "dev": {
     "port": 3000,
@@ -35,7 +35,12 @@
       "new_sqlite_classes": ["RideInfoStream"],
     },
   ],
-  "triggers": {
-    "crons": ["15 * * * *"],
-  },
+  "workflows": [
+    {
+      "name": "push-receipts-workflow",
+      "binding": "PUSH_RECEIPTS_WORKFLOW",
+      "class_name": "PushReceiptsWorkflow",
+      "schedules": ["15 * * * *"],
+    },
+  ],
 }
