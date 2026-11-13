@@ -1,7 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { CrownSimpleIcon } from "phosphor-react-native";
 import { useState } from "react";
 import { NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
@@ -97,9 +96,7 @@ const ConfirmRide = () => {
       {/* header */}
       <View className="flex-row gap-4 items-center mt-safe">
         <BackButton />
-        <FontText className="font-medium text-2xl">
-          Confirm Your Booking
-        </FontText>
+        <FontText className="font-medium text-2xl">Confirm Your Ride</FontText>
       </View>
 
       {/* main content */}
@@ -134,7 +131,7 @@ const ConfirmRide = () => {
             {/* location info */}
             <View className="flex-col gap-4">
               <View className="flex-row w-full justify-between items-center">
-                <FontText className="text-xl font-medium">
+                <FontText className="text-2xl font-medium">
                   Pick-up and drop-off
                 </FontText>
                 <OutlineButton
@@ -152,7 +149,7 @@ const ConfirmRide = () => {
             {/* ride members */}
             <View className="flex-col gap-4">
               <View className="flex-row w-full justify-between items-center">
-                <FontText className="text-xl font-medium">People</FontText>
+                <FontText className="text-2xl font-medium">People</FontText>
                 <OutlineButton
                   title="Edit"
                   onPress={() => router.navigate("/home/group-ride")}
@@ -162,9 +159,7 @@ const ConfirmRide = () => {
               <View className="flex-col gap-4">
                 <RiderCard
                   member={{ firstName, lastName, userType, eid, phoneNumber }}
-                  actionComponent={
-                    <CrownSimpleIcon color="#FFD600" size={24} weight="fill" />
-                  }
+                  showContactBanner
                 />
                 {members.map((member, index) => (
                   <RiderCard key={index} member={member} />
@@ -174,7 +169,7 @@ const ConfirmRide = () => {
 
             {/* guidelines */}
             <View className="flex-col gap-4 pb-4">
-              <FontText className="text-xl font-medium">Guidelines</FontText>
+              <FontText className="text-2xl font-medium">Guidelines</FontText>
               <GuidelinesListShort />
             </View>
           </View>

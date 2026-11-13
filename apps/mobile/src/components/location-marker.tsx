@@ -49,10 +49,10 @@ const LocationMarker = ({
       <Animated.View
         style={[
           {
-            width: 24,
-            height: 24,
-            borderRadius: 12,
-            backgroundColor: "white",
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            backgroundColor: "#BF570033",
             alignItems: "center",
             justifyContent: "center",
             shadowColor: "#000",
@@ -60,19 +60,29 @@ const LocationMarker = ({
             shadowOpacity: 0.2,
             shadowRadius: 4,
             elevation: 4,
-            margin: 4,
           },
           pulseStyle,
         ]}
       >
         <View
           style={{
-            width: 16,
-            height: 16,
-            borderRadius: 8,
-            backgroundColor: UTBurntOrange,
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: "white",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        >
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: UTBurntOrange,
+            }}
+          />
+        </View>
       </Animated.View>
     </Marker>
   );

@@ -41,7 +41,7 @@ const MissedRideModal = ({
                 />
               </View>
               <OutlineButton
-                title="Book a New Ride"
+                title="Request a New Ride"
                 onPress={() => setShowModal(false)}
                 medium
               />

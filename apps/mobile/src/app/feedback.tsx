@@ -141,7 +141,7 @@ const Feedback = () => {
           {loadingState === "done" && (
             <>
               <FontText className="text-xl font-semibold mb-4 mt-4">
-                Booking details
+                Ride details
               </FontText>
               <View className="flex-col gap-2">
                 <FontText className="text-lg">{`${new Date(submittedAt).toLocaleDateString("en-US", { timeZone: "America/Chicago" })} • ${new Date(submittedAt).toLocaleTimeString("en-US", { timeZone: "America/Chicago" })}`}</FontText>
