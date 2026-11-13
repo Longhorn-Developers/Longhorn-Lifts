@@ -9,14 +9,13 @@ import RideEvent from "@sure-walk/utils/types/ride-event";
 import VehicleInfoShort from "@sure-walk/utils/types/vehicle-info-short";
 import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, SplashScreen } from "expo-router";
+import { router } from "expo-router";
 import { useSearchParams } from "expo-router/build/hooks";
 import * as SecureStore from "expo-secure-store";
 import {
   CarIcon,
   CircleIcon,
   CopyIcon,
-  CrownSimpleIcon,
   MapPinIcon,
   WarningCircleIcon,
 } from "phosphor-react-native";
@@ -40,7 +39,6 @@ import BackButton from "@/src/components/back-button";
 import CancelRideModal from "@/src/components/cancel-ride-modal";
 import FontText from "@/src/components/font-text";
 import { GuidelinesListShort } from "@/src/components/guidelines-list";
-import OutlineButton from "@/src/components/outline-button";
 import PickupDropoffLocationInfo from "@/src/components/pickup-dropoff-location-info";
 import RideStateStep, {
   RideStateStepDivider,
@@ -441,8 +439,10 @@ const CurrentRideInfo = () => {
               }}
               tracksViewChanges={true}
             >
-              <View className="bg-[#EDD9CA] rounded-full items-center justify-center w-[32px] h-[32px]">
-                <CircleIcon color={UTBurntOrange} weight="fill" size="20" />
+              <View className="bg-white border border-slate-200 rounded-full items-center justify-center w-[44px] h-[44px]">
+                <View className="bg-[#BF570033] rounded-full items-center justify-center w-[36px] h-[36px]">
+                  <CircleIcon color={UTBurntOrange} weight="fill" size="20" />
+                </View>
               </View>
             </Marker>
             <Marker
@@ -452,8 +452,10 @@ const CurrentRideInfo = () => {
               }}
               tracksViewChanges={true}
             >
-              <View className="bg-[#C6DBE4] rounded-full items-center justify-center w-[32px] h-[32px]">
-                <MapPinIcon color={UTBluebonnet} size="20" weight="fill" />
+              <View className="bg-white border border-slate-200 rounded-full items-center justify-center w-[44px] h-[44px]">
+                <View className="bg-[#005F8633] rounded-full items-center justify-center w-[36px] h-[36px]">
+                  <MapPinIcon color={UTBluebonnet} size="20" weight="fill" />
+                </View>
               </View>
             </Marker>
             <Marker
@@ -505,7 +507,7 @@ const CurrentRideInfo = () => {
                 >
                   {rideDetails.rideState === "arrived" && <TwoMinuteWarning />}
                   <FontText
-                    className="text-2xl font-medium"
+                    className="text-xl font-semibold"
                     onLayout={
                       rideDetails.rideState === "in progress" ||
                       rideDetails.rideState === "dropped off"
@@ -542,16 +544,16 @@ const CurrentRideInfo = () => {
               )}
               <View onLayout={vehicleInfo ? undefined : handleLayout1}>
                 <View
-                  className="flex-col gap-2 mt-2 mb-2"
+                  className="flex-col gap-2 mt-2 mb-4"
                   onLayout={vehicleInfo ? undefined : handleLayout0}
                 >
                   {vehicleInfo === null &&
                     rideDetails.rideState === "arrived" && <TwoMinuteWarning />}
-                  <FontText className="text-2xl font-medium">
-                    Booking details
+                  <FontText className="text-xl font-semibold">
+                    Ride Details
                   </FontText>
                 </View>
-                <View className="mt-2 mb-6">
+                <View className="mb-6">
                   {pickupLocation && dropoffLocation && (
                     <PickupDropoffLocationInfo
                       pickupLocation={pickupLocation}
@@ -560,10 +562,32 @@ const CurrentRideInfo = () => {
                   )}
                 </View>
               </View>
+              <FontText className="text-xl font-semibold pb-4">
+                Group Ride Members
+              </FontText>
+              <View className="flex-col gap-4 mb-6">
+                <RiderCard
+                  member={{
+                    firstName: rideDetails.leader.firstName,
+                    lastName: rideDetails.leader.lastName,
+                    userType: rideDetails.leader.userType,
+                    eid: rideDetails.leader.eid,
+                    phoneNumber: rideDetails.leader.phoneNumber,
+                  }}
+                  showContactBanner={
+                    rideDetails.groupRide.length !== 0 &&
+                    rideDetails.rideState !== "in progress" &&
+                    rideDetails.rideState !== "dropped off"
+                  }
+                />
+                {rideDetails.groupRide.map((member, index) => (
+                  <RiderCard key={index} member={member} />
+                ))}
+              </View>
               {rideDetails.groupRide.length !== 0 && (
                 <>
-                  <FontText className="text-xl font-medium pb-4">
-                    Share group ride
+                  <FontText className="text-xl font-semibold pb-4">
+                    Share Group Ride
                   </FontText>
                   <View className="bg-slate-50 rounded-lg border border-slate-200 flex-row items-center justify-between px-4 py-2.5 mb-6">
                     <FontText className="text-lg">
@@ -575,29 +599,7 @@ const CurrentRideInfo = () => {
                   </View>
                 </>
               )}
-              <View className="flex-row items-center justify-between w-full pb-4">
-                <FontText className="text-xl font-medium">
-                  Ride members
-                </FontText>
-              </View>
-              <View className="flex-col gap-4 pb-4">
-                <RiderCard
-                  member={{
-                    firstName: rideDetails.leader.firstName,
-                    lastName: rideDetails.leader.lastName,
-                    userType: rideDetails.leader.userType,
-                    eid: rideDetails.leader.eid,
-                    phoneNumber: rideDetails.leader.phoneNumber,
-                  }}
-                  actionComponent={
-                    <CrownSimpleIcon color="#FFD600" size={24} weight="fill" />
-                  }
-                />
-                {rideDetails.groupRide.map((member, index) => (
-                  <RiderCard key={index} member={member} />
-                ))}
-              </View>
-              <FontText className="text-xl font-medium mb-4 mt-2">
+              <FontText className="text-xl font-semibold mb-4 mt-2">
                 Guidelines
               </FontText>
               <GuidelinesListShort />
@@ -606,12 +608,14 @@ const CurrentRideInfo = () => {
                 rideDetails.rideState !== "in progress" &&
                 rideDetails.rideState !== "dropped off" && (
                   <View className="flex-row pb-safe">
-                    <OutlineButton
-                      title="Cancel booking"
-                      onPress={() => setModalVisible(true)}
-                      red
-                      small
-                    />
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
+                      <FontText
+                        className="text-base font-medium color-red-700"
+                        style={{ textDecorationLine: "underline" }}
+                      >
+                        Cancel Ride
+                      </FontText>
+                    </TouchableOpacity>
                   </View>
                 )}
             </>

@@ -18,11 +18,13 @@ const PickupDropoffLocationInfo = ({
       style={{ boxShadow: "0 2px 8px 0 rgba(214, 210, 196, 0.20)" }}
     >
       <View className="bg-slate-50 flex-row p-4 gap-4 items-center rounded-t-2xl border border-slate-200">
-        <View className="bg-[#BF570033] rounded-full items-center justify-center w-[32px] h-[32px]">
-          <CircleIcon color={UTBurntOrange} weight="fill" size="20" />
+        <View className="bg-white border border-slate-200 rounded-full items-center justify-center w-[44px] h-[44px]">
+          <View className="bg-[#BF570033] rounded-full items-center justify-center w-[36px] h-[36px]">
+            <CircleIcon color={UTBurntOrange} weight="fill" size="20" />
+          </View>
         </View>
         <View className="flex-1 flex-col gap-1">
-          <FontText className="font-medium text-lg">
+          <FontText className="font-medium text-base">
             {pickupLocation?.name}
           </FontText>
           <FontText className="text-lg color-[#333F48]">
@@ -31,11 +33,13 @@ const PickupDropoffLocationInfo = ({
         </View>
       </View>
       <View className="bg-slate-50 flex-row p-4 gap-4 items-center rounded-b-2xl border border-slate-200 mt-[-1px]">
-        <View className="bg-[#005F8633] rounded-full items-center justify-center w-[32px] h-[32px]">
-          <MapPinIcon color={UTBluebonnet} size="20" weight="fill" />
+        <View className="bg-white border border-slate-200 rounded-full items-center justify-center w-[44px] h-[44px]">
+          <View className="bg-[#005F8633] rounded-full items-center justify-center w-[36px] h-[36px]">
+            <MapPinIcon color={UTBluebonnet} size="20" weight="fill" />
+          </View>
         </View>
         <View className="flex-1 flex-col gap-1">
-          <FontText className="font-medium text-lg">
+          <FontText className="font-medium text-base">
             {dropoffLocation?.name}
           </FontText>
           <FontText className="text-lg color-[#333F48]">

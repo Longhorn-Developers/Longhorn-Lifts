@@ -4,9 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   ClockClockwiseIcon,
-  CrownSimpleIcon,
-  MinusCircleIcon,
   UserCirclePlusIcon,
+  XCircleIcon,
 } from "phosphor-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { Platform, TouchableOpacity, View } from "react-native";
@@ -19,7 +18,7 @@ import OutlineButton from "@/src/components/outline-button";
 import RiderCard from "@/src/components/rider-card";
 import TertiaryButton from "@/src/components/tertiary-button";
 import TextInputField from "@/src/components/text-input-field";
-import { red500, slate700 } from "@/src/utils/colors";
+import { slate700, slate900 } from "@/src/utils/colors";
 import { useGroupRideSession } from "@/src/utils/context/group-ride-context";
 import { useSession } from "@/src/utils/context/user-context";
 
@@ -129,23 +128,20 @@ const GroupRide = () => {
           bottomOffset={120}
         >
           {/* group leader */}
-          <FontText className="text-xl font-semibold mt-5 transition-all mb-4">
-            Group Leader
-          </FontText>
-          <RiderCard
-            member={leaderGroupRideMember}
-            actionComponent={
-              <CrownSimpleIcon color="#FFD600" size={24} weight="fill" />
-            }
-          />
-
-          {/* riders or add rider form */}
-          <View className="flex-row gap-4 mt-6 justify-between mb-6">
-            <FontText className="text-xl font-semibold">Group Members</FontText>
+          <View className="flex-row justify-between items-center mt-5 mb-4">
+            <FontText className="text-xl font-semibold transition-all">
+              Primary Contact
+            </FontText>
             <FontText className="text-xl font-semibold color-ut-bluebonnet">
-              {`Riders (${members.length}/4)`}
+              {`Riders (${members.length + 1}/5)`}
             </FontText>
           </View>
+          <RiderCard member={leaderGroupRideMember} />
+
+          {/* riders or add rider form */}
+          <FontText className="text-xl font-semibold mt-6 mb-6">
+            Group Members
+          </FontText>
           {members.length > 0 && (
             <View className="flex-col gap-4 mb-6">
               {members.map((rideMember, index) => (
@@ -154,7 +150,7 @@ const GroupRide = () => {
                     member={rideMember}
                     actionComponent={
                       <TouchableOpacity onPress={() => removeRider(index)}>
-                        <MinusCircleIcon color={red500} size={24} />
+                        <XCircleIcon color={slate900} size={24} />
                       </TouchableOpacity>
                     }
                   />
@@ -225,6 +221,7 @@ const GroupRide = () => {
                     clearFields();
                   }}
                   small
+                  orange
                 />
                 <LargeButton
                   title="Save"

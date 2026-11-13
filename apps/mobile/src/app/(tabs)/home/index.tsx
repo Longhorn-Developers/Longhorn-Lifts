@@ -24,8 +24,8 @@ import * as Notifications from "expo-notifications";
 import { router, useFocusEffect } from "expo-router";
 import {
   ArrowCircleRightIcon,
+  CaretLeftIcon,
   CircleIcon,
-  FadersHorizontalIcon,
   MapPinIcon,
   NavigationArrowIcon,
   StarIcon,
@@ -114,7 +114,6 @@ const Home = () => {
     ],
     [snap0, snap1, currentRide],
   );
-
   const [code, setCode] = useState<string>("");
   const [viewRideDisabled, setViewRideDisabled] = useState<boolean>(false);
   const [snapIndex, setSnapIndex] = useState<number>(1);
@@ -433,18 +432,9 @@ const Home = () => {
           </FontText>
         </View>
 
-        {/* map legend and profile page buttons */}
+        {/* profile page button */}
         <TouchableOpacity
-          className="absolute left-5 top-3 p-3 items-center justify-center rounded-2xl bg-slate-100"
-          onPress={() => {
-            if (snapIndex === 2) sheetRef.current?.snapToIndex(1);
-            setLegendOpen(!legendOpen);
-          }}
-        >
-          <FadersHorizontalIcon color={slate700} size="24" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="absolute right-5 top-3 p-3 items-center justify-center rounded-2xl bg-slate-100"
+          className="absolute right-5 top-3 p-3 items-center justify-center rounded-2xl bg-slate-100 border border-slate-200"
           onPress={() => {
             router.navigate("/profile");
           }}
@@ -459,6 +449,10 @@ const Home = () => {
           <MapView
             ref={mapRef}
             style={{ width: "100%", flex: 1, zIndex: 0 }}
+            onPress={() => {
+              if (snapIndex === 2) sheetRef.current?.snapToIndex(1);
+              setLegendOpen(!legendOpen);
+            }}
             initialRegion={{
               latitude: 30.282962,
               longitude: -97.737224,
@@ -576,7 +570,7 @@ const Home = () => {
             <View className="flex-col gap-5 px-5 pb-1">
               <View className="flex-row w-full justify-between items-center">
                 <FontText className="text-2xl font-medium">
-                  {currentRide ? "Ride in Progress" : "Book a ride"}
+                  {currentRide ? "Ride in Progress" : "Request a Ride"}
                 </FontText>
                 {!currentRide && (
                   <TertiaryButton
@@ -621,8 +615,14 @@ const Home = () => {
                   className={`${focusedInput === "pickup" ? "bg-slate-100" : "bg-slate-50"} transition-colors flex-row p-4 gap-4 items-center rounded-t-2xl border border-slate-200`}
                   onPress={() => startLocationRef.current?.focus()}
                 >
-                  <View className="bg-[#BF570033] rounded-full items-center justify-center w-[32px] h-[32px]">
-                    <CircleIcon color={UTBurntOrange} weight="fill" size="20" />
+                  <View className="bg-white border border-slate-200 rounded-full items-center justify-center w-[44px] h-[44px]">
+                    <View className="bg-[#BF570033] rounded-full items-center justify-center w-[36px] h-[36px]">
+                      <CircleIcon
+                        color={UTBurntOrange}
+                        weight="fill"
+                        size="20"
+                      />
+                    </View>
                   </View>
                   <View className="flex-1 flex-col gap-1">
                     <TextInput
@@ -633,7 +633,7 @@ const Home = () => {
                         snapIndex !== 2 && sheetRef.current?.expand();
                       }}
                       onBlur={() => setIsInputFocused(false)}
-                      className="font-medium text-lg"
+                      className="font-medium text-base"
                       placeholder="Where from?"
                       placeholderTextColor={gray900}
                       onChangeText={(text) => {
@@ -655,8 +655,14 @@ const Home = () => {
                   className={`${focusedInput === "dropoff" ? "bg-slate-100" : "bg-slate-50"} transition-colors flex-row p-4 gap-4 items-center rounded-b-2xl border border-slate-200 mt-[-1px] mb-4`}
                   onPress={() => destinationRef.current?.focus()}
                 >
-                  <View className="bg-[#005F8633] rounded-full items-center justify-center w-[32px] h-[32px]">
-                    <MapPinIcon color={UTBluebonnet} size="20" weight="fill" />
+                  <View className="bg-white border border-slate-200 rounded-full items-center justify-center w-[44px] h-[44px]">
+                    <View className="bg-[#005F8633] rounded-full items-center justify-center w-[36px] h-[36px]">
+                      <MapPinIcon
+                        color={UTBluebonnet}
+                        size="20"
+                        weight="fill"
+                      />
+                    </View>
                   </View>
                   <View className="flex-1 flex-col gap-1">
                     <TextInput
@@ -667,7 +673,7 @@ const Home = () => {
                         snapIndex !== 2 && sheetRef.current?.expand();
                       }}
                       onBlur={() => setIsInputFocused(false)}
-                      className="font-medium text-lg"
+                      className="font-medium text-base"
                       placeholder="Where to?"
                       placeholderTextColor={gray900}
                       onChangeText={(text) => {
@@ -692,8 +698,11 @@ const Home = () => {
                       sheetRef.current?.close();
                     }}
                   >
-                    <FontText className="text-lg color-ut-bluebonnet">
-                      Have a ride code?
+                    <FontText
+                      className="text-lg color-ut-bluebonnet"
+                      style={{ textDecorationLine: "underline" }}
+                    >
+                      Join a Group Ride
                     </FontText>
                   </TO>
                   {((focusedInput === "pickup" &&
@@ -868,6 +877,7 @@ const Home = () => {
       <BottomSheetModalProvider>
         <BottomSheetModal
           ref={rideCodeSheetRef}
+          enableDynamicSizing={true}
           handleComponent={() => (
             <View className="rounded-t-[28px] flex-col items-center py-4">
               <View className="bg-slate-300 rounded w-8 h-1" />
@@ -876,12 +886,22 @@ const Home = () => {
           onDismiss={() => sheetRef.current?.snapToIndex(1)}
         >
           <BottomSheetView className="px-5 pb-safe">
-            <FontText className="text-2xl font-medium">Join a Ride</FontText>
+            <View className="flex-row items-center gap-[15px] mb-1">
+              <TouchableOpacity
+                className="p-3 items-center justify-center rounded-2xl border border-slate-200 bg-ut-purewhite"
+                onPress={() => rideCodeSheetRef.current?.dismiss()}
+              >
+                <CaretLeftIcon color={slate700} size={24} />
+              </TouchableOpacity>
+              <FontText className="text-2xl font-medium">
+                Join a Group Ride
+              </FontText>
+            </View>
             <FontText className="text-lg font-normal mt-2 mb-6">
-              Enter the ride code shared by your group leader.
+              Enter the ride code shared by your primary contact.
             </FontText>
             <TextInputField
-              placeholder="ABC1234"
+              placeholder="Enter ride code"
               autoCapitalize={"characters"}
               value={code}
               onChangeText={(text) => setCode(text.toUpperCase())}

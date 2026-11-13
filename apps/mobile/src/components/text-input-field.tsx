@@ -47,7 +47,7 @@ const TextInputField = ({
               }
             >
               <FontText
-                className={`text-lg ${optionalPressableCallback ? "font-semibold text-ut-bluebonnet" : ""}`}
+                className={`text-lg ${optionalPressableCallback ? "font-normal text-ut-bluebonnet" : ""}`}
               >
                 {optionalPressableText}
               </FontText>
