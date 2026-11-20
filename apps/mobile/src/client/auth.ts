@@ -7,7 +7,7 @@ const apiEnvironmentOverride:
   | "development"
   | "preview"
   | "production"
-  | undefined = "preview";
+  | undefined = "development";
 
 const DEV_API_URL = `http://${Constants.expoConfig?.hostUri?.split(":").shift()}:3000/api`;
 const PREVIEW_API_URL =

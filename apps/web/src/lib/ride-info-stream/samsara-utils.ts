@@ -147,6 +147,14 @@ const createRoute = async ({
     .values({
       samsaraID: data.id,
       userID: user.id,
+      userInfoSnapshot: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
+        requiresAssistance: user.requiresAssistance,
+        eid: user.eid,
+        userType: user.userType,
+      },
       members: members,
       pickupLocationID: pickupLocation.id,
       dropoffLocationID: dropoffLocation.id,

@@ -13,8 +13,8 @@ import {
 import { useEffect, useState } from "react";
 import { Linking, ScrollView, TouchableOpacity, View } from "react-native";
 
-import { getErrorMessage } from "@/src/client";
 import { api, ok } from "@/src/client/session";
+import { getErrorMessage } from "@/src/client/utils";
 import DropdownSelect from "@/src/components/dropdown-select";
 import EditProfileTextInput from "@/src/components/edit-profile-text-input";
 import FontText from "@/src/components/font-text";

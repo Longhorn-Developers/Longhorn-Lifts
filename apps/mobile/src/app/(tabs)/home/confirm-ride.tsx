@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
-import { getErrorMessage, handleNetworkFailure } from "@/src/client";
 import { api, ok } from "@/src/client/session";
+import { getErrorMessage, handleNetworkFailure } from "@/src/client/utils";
 import BackButton from "@/src/components/back-button";
 import FontText from "@/src/components/font-text";
 import { GuidelinesListShort } from "@/src/components/guidelines-list";

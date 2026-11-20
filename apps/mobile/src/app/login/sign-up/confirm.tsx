@@ -9,9 +9,9 @@ import {
   View,
 } from "react-native";
 
-import { getErrorMessage, handleNetworkFailure } from "@/src/client";
 import { confirmGeneric } from "@/src/client/auth";
 import { ok } from "@/src/client/session";
+import { getErrorMessage, handleNetworkFailure } from "@/src/client/utils";
 import FontText from "@/src/components/font-text";
 import LargeButton from "@/src/components/large-button";
 import { gray500 } from "@/src/utils/colors";

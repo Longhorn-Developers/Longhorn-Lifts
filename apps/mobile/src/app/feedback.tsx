@@ -9,8 +9,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import FontText from "@/src/components/font-text";
 import LargeButton from "@/src/components/large-button";
 
-import { getErrorMessage, handleNetworkFailure } from "../client";
 import { api, ok } from "../client/session";
+import { getErrorMessage, handleNetworkFailure } from "../client/utils";
 import TextInputField from "../components/text-input-field";
 import { slate200, UTBurntOrange } from "../utils/colors";
 import { useToastContext } from "../utils/context/toast-context";

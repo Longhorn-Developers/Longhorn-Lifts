@@ -127,6 +127,8 @@ const Home = () => {
   const [focusedInput, setFocusedInput] = useState<"pickup" | "dropoff">(
     "pickup",
   );
+  const [firstLocationUpdate, setFirstLocationUpdate] = useState<boolean>(true);
+  const [edited, setEdited] = useState<boolean>(false);
   const [, setIsInputFocused] = useState<boolean>(false);
   const [pickupList, setPickupList] = useState<LocationType[]>([]);
   const [dropoffList, setDropoffList] = useState<LocationType[]>([]);
@@ -167,6 +169,66 @@ const Home = () => {
     }, 1000);
   };
 
+  const getLocation = async () => {
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.BestForNavigation,
+    });
+    setLocation(location);
+
+    if (firstLocationUpdate) {
+      centerMapOnLocation(location);
+      setFirstLocationUpdate(false);
+    }
+
+    const userLat = location.coords.latitude;
+    const userLon = location.coords.longitude;
+    console.log("[Location] GPS coordinates:", userLat, userLon);
+
+    const haversine = (
+      lat1: number,
+      lon1: number,
+      lat2: number,
+      lon2: number,
+    ) => {
+      const toRad = (v: number) => (v * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    const allPickupLocations = getMatchingPickupLocations("");
+    if (allPickupLocations.length > 0) {
+      const nearest = allPickupLocations.reduce((closest, loc) =>
+        haversine(userLat, userLon, loc.lat, loc.lon) <
+        haversine(userLat, userLon, closest.lat, closest.lon)
+          ? loc
+          : closest,
+      );
+      const { latitude, longitude } = location.coords;
+      const dist = Math.hypot(latitude - nearest.lat, longitude - nearest.lon);
+      if (dist > 0.001) {
+        setUserLocationLabel("Off-Campus");
+        return;
+      }
+      console.log(
+        "[Location] Selected nearest:",
+        nearest.name,
+        `(id=${nearest.id})`,
+      );
+      setUserLocationLabel(nearest.name);
+      if (!edited) {
+        // if the user has started editing ignore this
+        setPickupLocationText(nearest.name);
+        setStartAddress(nearest.address);
+        setPickupLocation(nearest);
+        setFocusedInput("dropoff");
+      }
+    }
+  };
+
   const requestLocationPermissions = async () => {
     let { status: currentStatus } =
       await Location.getForegroundPermissionsAsync();
@@ -190,64 +252,7 @@ const Home = () => {
       console.error("location denied");
       return;
     } else {
-      let location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
-      });
-      setLocation(location);
-      centerMapOnLocation(location);
-
-      const userLat = location.coords.latitude;
-      const userLon = location.coords.longitude;
-      console.log("[Location] GPS coordinates:", userLat, userLon);
-
-      const haversine = (
-        lat1: number,
-        lon1: number,
-        lat2: number,
-        lon2: number,
-      ) => {
-        const toRad = (v: number) => (v * Math.PI) / 180;
-        const dLat = toRad(lat2 - lat1);
-        const dLon = toRad(lon2 - lon1);
-        const a =
-          Math.sin(dLat / 2) ** 2 +
-          Math.cos(toRad(lat1)) *
-            Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) ** 2;
-        return Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      };
-
-      const allPickupLocations = getMatchingPickupLocations("");
-      if (allPickupLocations.length > 0) {
-        const nearest = allPickupLocations.reduce((closest, loc) =>
-          haversine(userLat, userLon, loc.lat, loc.lon) <
-          haversine(userLat, userLon, closest.lat, closest.lon)
-            ? loc
-            : closest,
-        );
-        const { latitude, longitude } = location.coords;
-        const dist = Math.hypot(
-          latitude - nearest.lat,
-          longitude - nearest.lon,
-        );
-        if (dist > 0.001) {
-          setUserLocationLabel("Off-Campus");
-          return;
-        }
-        console.log(
-          "[Location] Selected nearest:",
-          nearest.name,
-          `(id=${nearest.id})`,
-        );
-        if (pickupLocationText === "") {
-          // if the user has started editing ignore this
-          setPickupLocationText(nearest.name);
-          setStartAddress(nearest.address);
-          setPickupLocation(nearest);
-          setUserLocationLabel(nearest.name);
-          setFocusedInput("dropoff");
-        }
-      }
+      return setInterval(getLocation, 1000 * 20);
     }
   };
 
@@ -300,9 +305,11 @@ const Home = () => {
   };
 
   useEffect(() => {
+    let locationInterval: NodeJS.Timeout | undefined;
+
     loadFavorites();
     registerForPushNotificationsAsync();
-    requestLocationPermissions();
+    requestLocationPermissions().then((v) => (locationInterval = v));
     const responseListener =
       Notifications.addNotificationResponseReceivedListener(
         handleMissedRideNotificationResponse,
@@ -313,6 +320,9 @@ const Home = () => {
     return () => {
       clearInterval(interval);
       clearInterval(hoursInterval);
+      if (locationInterval) {
+        clearInterval(locationInterval);
+      }
       responseListener.remove();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -381,6 +391,7 @@ const Home = () => {
   };
 
   const clickedPickupLocation = (location: LocationType) => () => {
+    setEdited(true);
     setPickupLocationText(location.name);
     setStartAddress(location.address);
     setPickupLocation(location);
@@ -394,6 +405,7 @@ const Home = () => {
   };
 
   const clickedDropoffLocation = (location: LocationType) => () => {
+    setEdited(true);
     setDropoffText(location.name);
     setDropoffAddress(location.address);
     setDropoffLocation(location);
@@ -649,6 +661,7 @@ const Home = () => {
                     <TextInput
                       ref={startLocationRef}
                       onFocus={() => {
+                        setEdited(true);
                         setFocusedInput("pickup");
                         setIsInputFocused(true);
                         snapIndex !== 2 && sheetRef.current?.expand();
@@ -691,6 +704,7 @@ const Home = () => {
                     <TextInput
                       ref={destinationRef}
                       onFocus={() => {
+                        setEdited(true);
                         setFocusedInput("dropoff");
                         setIsInputFocused(true);
                         snapIndex !== 2 && sheetRef.current?.expand();

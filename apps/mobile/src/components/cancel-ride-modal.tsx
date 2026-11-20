@@ -2,8 +2,8 @@ import { router } from "expo-router";
 import { WarningIcon } from "phosphor-react-native";
 import { Modal, Pressable, View } from "react-native";
 
-import { getErrorMessage, handleNetworkFailure } from "../client";
 import { api, ok } from "../client/session";
+import { getErrorMessage, handleNetworkFailure } from "../client/utils";
 import { UTTangerine } from "../utils/colors";
 import { useCurrentRideSession } from "../utils/context/current-ride-context";
 import { useToastContext } from "../utils/context/toast-context";
