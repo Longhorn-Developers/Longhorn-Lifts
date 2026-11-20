@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "d1_databases": [
+    {
+      "binding": "LIFTS_DB",
+      "database_name": "lifts-preview-db",
+      "database_id": "7c946999-66c3-484b-b00b-081bd9d7ff20",
+      "migrations_dir": "./drizzle",
+    },
+  ],
+}

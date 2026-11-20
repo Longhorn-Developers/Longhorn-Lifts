@@ -1,4 +1,5 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { isInHours } from "@sure-walk/utils/hours-handling";
 import CurrentRideMini from "@sure-walk/utils/types/current-ride-mini";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -71,6 +72,18 @@ export async function POST(request: NextRequest) {
       {
         message: "Invalid request body.",
         errors: validationResult.error.issues,
+      },
+      { status: 400 },
+    );
+  }
+
+  const prod = process.env.ENV === "production";
+
+  // out of hours handling
+  if (!isInHours() && prod) {
+    return NextResponse.json(
+      {
+        message: "Sure Walk is closed.",
       },
       { status: 400 },
     );

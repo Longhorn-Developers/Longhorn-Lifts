@@ -44,3 +44,6 @@ web-build/
 
 google-services.json
 local.properties
+
+credentials/*
+credentials.json

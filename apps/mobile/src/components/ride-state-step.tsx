@@ -154,7 +154,7 @@ const RideStateStep = ({
   /* eslint-enable react-hooks/rules-of-hooks */
 
   return (
-    <View className={`w-[${width}px]`}>
+    <View className={`w-[${width}px] z-10`}>
       <View className={`flex-col items-center gap-2`}>
         <View className="flex-row items-center">
           <Animated.View

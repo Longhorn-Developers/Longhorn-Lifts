@@ -8,7 +8,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import z from "zod";
 
-import { hashString } from "./auth";
+import { verifyPassword } from "./auth";
 import { getDB } from "./db";
 import { admins } from "./db/schema/admins";
 
@@ -71,15 +71,13 @@ export const login = async (_: FormState, formData: FormData) => {
   }
 
   const { email, password } = validation.data;
-  const hash = hashString(password);
-
   const admin = await getDB()
     .select()
     .from(admins)
-    .where(and(eq(admins.email, email), eq(admins.hash, hash)))
+    .where(and(eq(admins.email, email)))
     .then((res) => res.shift());
 
-  if (!admin) {
+  if (!admin || !(await verifyPassword(password, admin.hash))) {
     return { message: "Invalid email / password." };
   }
 

@@ -10,19 +10,27 @@ import { dropoffLocations, pickupLocations } from "@/lib/db/schema/locations";
 import { rides } from "@/lib/db/schema/rides";
 import { User, users } from "@/lib/db/schema/users";
 
-const canProvideFeedback = async (user: User, rideID: string) => {
+const canProvideFeedback = async (
+  user: User,
+  rideID: string,
+): Promise<{
+  err?: NextResponse;
+  data?: typeof ride;
+}> => {
   const [existingFeedback] = await getDB()
     .select()
     .from(feedback)
     .where(and(eq(feedback.userID, user.id), eq(feedback.rideID, rideID)));
 
   if (existingFeedback) {
-    return NextResponse.json(
-      {
-        message: "Feedback already provided.",
-      },
-      { status: 403 },
-    );
+    return {
+      err: NextResponse.json(
+        {
+          message: "Feedback already provided.",
+        },
+        { status: 403 },
+      ),
+    };
   }
 
   const ride = await getDB()
@@ -41,12 +49,14 @@ const canProvideFeedback = async (user: User, rideID: string) => {
     }));
 
   if (!ride) {
-    return NextResponse.json(
-      {
-        message: "Ride not found.",
-      },
-      { status: 404 },
-    );
+    return {
+      err: NextResponse.json(
+        {
+          message: "Ride not found.",
+        },
+        { status: 404 },
+      ),
+    };
   }
 
   if (
@@ -54,12 +64,14 @@ const canProvideFeedback = async (user: User, rideID: string) => {
     ride.numPickedUp === 0 ||
     ride.dropoffStopState !== "departed"
   ) {
-    return NextResponse.json(
-      {
-        message: "Ride is incomplete",
-      },
-      { status: 403 },
-    );
+    return {
+      err: NextResponse.json(
+        {
+          message: "Ride is incomplete",
+        },
+        { status: 403 },
+      ),
+    };
   }
 
   if (
@@ -68,16 +80,18 @@ const canProvideFeedback = async (user: User, rideID: string) => {
       (m) => m.phoneNumber === user.phoneNumber || m.eid === user.eid,
     ) === undefined
   ) {
-    return NextResponse.json(
-      {
-        message:
-          "You were not a part of this ride. If this is in error, this can happen due to an incorrect EID or phone number submitted by the leader if you are a group ride member.",
-      },
-      { status: 403 },
-    );
+    return {
+      err: NextResponse.json(
+        {
+          message:
+            "You were not a part of this ride. If this is in error, this can happen due to an incorrect EID or phone number submitted by the leader if you are a group ride member.",
+        },
+        { status: 403 },
+      ),
+    };
   }
 
-  return ride;
+  return { data: ride };
 };
 
 export async function GET(request: NextRequest) {
@@ -105,15 +119,15 @@ export async function GET(request: NextRequest) {
     .then(([result]) => result.users))!;
 
   const allowed = await canProvideFeedback(user, rideID);
-  if (allowed instanceof NextResponse) {
-    return allowed;
+  if (allowed.err) {
+    return allowed.err;
   }
 
   return NextResponse.json(
     {
-      submittedAt: allowed.submittedAt,
-      pickupLocation: allowed.pickupLocation,
-      dropoffLocation: allowed.dropoffLocation,
+      submittedAt: allowed.data?.submittedAt,
+      pickupLocation: allowed.data?.pickupLocation,
+      dropoffLocation: allowed.data?.dropoffLocation,
     },
     { status: 200 },
   );
@@ -122,7 +136,7 @@ export async function GET(request: NextRequest) {
 const feedbackBody = z.object({
   rideID: z.string(),
   howLikely: z.int().min(1).max(5),
-  extraFeedback: z.string().min(5).max(2000).optional(),
+  extraFeedback: z.string().min(1).max(2000).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -154,8 +168,8 @@ export async function POST(request: NextRequest) {
     .then(([result]) => result.users))!;
 
   const allowed = await canProvideFeedback(user, rideID);
-  if (allowed instanceof NextResponse) {
-    return allowed;
+  if (allowed.err) {
+    return allowed.err;
   }
 
   await getDB().insert(feedback).values({

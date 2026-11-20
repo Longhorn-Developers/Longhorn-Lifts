@@ -9,7 +9,7 @@ import RideEvent from "@sure-walk/utils/types/ride-event";
 import VehicleInfoShort from "@sure-walk/utils/types/vehicle-info-short";
 import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, SplashScreen } from "expo-router";
 import { useSearchParams } from "expo-router/build/hooks";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -507,7 +507,7 @@ const CurrentRideInfo = () => {
                 >
                   {rideDetails.rideState === "arrived" && <TwoMinuteWarning />}
                   <FontText
-                    className="text-xl font-semibold"
+                    className="text-2xl font-medium"
                     onLayout={
                       rideDetails.rideState === "in progress" ||
                       rideDetails.rideState === "dropped off"
@@ -549,7 +549,7 @@ const CurrentRideInfo = () => {
                 >
                   {vehicleInfo === null &&
                     rideDetails.rideState === "arrived" && <TwoMinuteWarning />}
-                  <FontText className="text-xl font-semibold">
+                  <FontText className="text-2xl font-medium">
                     Ride Details
                   </FontText>
                 </View>
@@ -562,7 +562,7 @@ const CurrentRideInfo = () => {
                   )}
                 </View>
               </View>
-              <FontText className="text-xl font-semibold pb-4">
+              <FontText className="text-xl font-medium pb-4">
                 Group Ride Members
               </FontText>
               <View className="flex-col gap-4 mb-6">
@@ -586,7 +586,7 @@ const CurrentRideInfo = () => {
               </View>
               {rideDetails.groupRide.length !== 0 && (
                 <>
-                  <FontText className="text-xl font-semibold pb-4">
+                  <FontText className="text-xl font-medium pb-4">
                     Share Group Ride
                   </FontText>
                   <View className="bg-slate-50 rounded-lg border border-slate-200 flex-row items-center justify-between px-4 py-2.5 mb-6">
@@ -599,7 +599,7 @@ const CurrentRideInfo = () => {
                   </View>
                 </>
               )}
-              <FontText className="text-xl font-semibold mb-4 mt-2">
+              <FontText className="text-xl font-medium mb-4 mt-2">
                 Guidelines
               </FontText>
               <GuidelinesListShort />

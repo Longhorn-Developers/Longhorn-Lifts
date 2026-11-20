@@ -9,8 +9,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import FontText from "@/src/components/font-text";
 import LargeButton from "@/src/components/large-button";
 
-import { getErrorMessage, handleNetworkFailure } from "../client";
 import { api, ok } from "../client/session";
+import { getErrorMessage, handleNetworkFailure } from "../client/utils";
 import TextInputField from "../components/text-input-field";
 import { slate200, UTBurntOrange } from "../utils/colors";
 import { useToastContext } from "../utils/context/toast-context";
@@ -23,13 +23,13 @@ const Feedback = () => {
   const rideID = params.get("rideID") ?? "";
 
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [disabled, setDisabled] = useState<boolean>(false);
   const [loadingState, setLoadingState] = useState<LoadingState>("loading");
   const [pickupLocation, setPickupLocation] = useState<string>("");
   const [dropoffLocation, setDropoffLocation] = useState<string>("");
   const [submittedAt, setSubmittedAt] = useState<string>("");
   const [feedback, setFeedback] = useState<string>("");
   const [rating, setRating] = useState<number>(3);
+  const [errReason, setErrReason] = useState<string>("");
 
   useEffect(() => {
     const fetchFeedback = async () => {
@@ -41,12 +41,15 @@ const Feedback = () => {
             res,
             "Can't submit feedback for this ride.",
           );
-          setToast({
-            title: "Can't submit feedback",
-            description: error,
-            onDismiss: () => setToast(null),
-            isError: true,
-          });
+          setErrReason(error);
+          if (error !== "Feedback already provided.") {
+            setToast({
+              title: "Can't submit feedback",
+              description: error,
+              onDismiss: () => setToast(null),
+              isError: true,
+            });
+          }
           setLoadingState("error");
         } else {
           setSubmittedAt(data.submittedAt);
@@ -62,10 +65,6 @@ const Feedback = () => {
 
     fetchFeedback();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    setDisabled(feedback.trim().length > 0 && feedback.trim().length <= 5);
-  }, [feedback]);
 
   const submit = async () => {
     if (loadingState === "error") {
@@ -208,12 +207,23 @@ const Feedback = () => {
               </View>
             </>
           )}
+          {loadingState === "error" &&
+            errReason === "Feedback already provided." && (
+              <>
+                <FontText className="text-xl font-semibold mb-4 mt-4">
+                  Feedback Received!
+                </FontText>
+                <FontText className="text-lg">
+                  Your feedback for this ride was already received. Thank you!
+                </FontText>
+              </>
+            )}
         </KeyboardAwareScrollView>
       </View>
       <LargeButton
         title={submitting ? "Submitting..." : "Return Home"}
         onPress={submit}
-        disabled={submitting || disabled}
+        disabled={submitting}
       />
     </View>
   );

@@ -1,12 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
-import { getErrorMessage, handleNetworkFailure } from "@/src/client";
 import { api, ok } from "@/src/client/session";
+import { getErrorMessage, handleNetworkFailure } from "@/src/client/utils";
 import BackButton from "@/src/components/back-button";
 import FontText from "@/src/components/font-text";
 import { GuidelinesListShort } from "@/src/components/guidelines-list";
@@ -146,7 +146,7 @@ const ConfirmRide = () => {
             {/* location info */}
             <View className="flex-col gap-4">
               <View className="flex-row w-full justify-between items-center">
-                <FontText className="text-2xl font-medium">
+                <FontText className="text-xl font-medium">
                   Pick-up and drop-off
                 </FontText>
                 <OutlineButton
@@ -164,7 +164,7 @@ const ConfirmRide = () => {
             {/* ride members */}
             <View className="flex-col gap-4">
               <View className="flex-row w-full justify-between items-center">
-                <FontText className="text-2xl font-medium">People</FontText>
+                <FontText className="text-xl font-medium">People</FontText>
                 <OutlineButton
                   title="Edit"
                   onPress={() => router.navigate("/home/group-ride")}
@@ -184,7 +184,7 @@ const ConfirmRide = () => {
 
             {/* guidelines */}
             <View className="flex-col gap-4 pb-4">
-              <FontText className="text-2xl font-medium">Guidelines</FontText>
+              <FontText className="text-xl font-medium">Guidelines</FontText>
               <GuidelinesListShort />
             </View>
           </View>

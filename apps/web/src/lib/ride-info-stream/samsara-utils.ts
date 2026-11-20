@@ -12,12 +12,13 @@ import { User } from "../db/schema/users";
 const samsaraClient = new SamsaraClient({ token: process.env.SAMSARA_API_KEY });
 
 const getCurrentWaitTime = async () => {
-  return 30;
+  return 15;
 };
 
 const getRideName = (user: User, members: GroupRideMember[]) => {
+  const env = process.env.ENV == "production" ? "" : "Testing ";
   // make sure the title of the route contains the # of people (group ride), if ADA is required, or both
-  return `${members.length > 0 ? `${members.length + 1}-person ` : ``}${user.requiresAssistance ? "ADA " : ""}Sure Walk for ${user.firstName} ${user.lastName}`;
+  return `${env}${members.length > 0 ? `${members.length + 1}-person ` : ``}${user.requiresAssistance ? "ADA " : ""}Sure Walk for ${user.firstName} ${user.lastName}`;
 };
 
 const retry = async <T>(func: () => Promise<T>) => {
@@ -65,14 +66,13 @@ const createRoute = async ({
   const routeName = getRideName(user, members);
   // display all relevant information for the leader and group ride members
   const routeNotes =
-    `Picking up ${user.firstName} ${user.lastName} (${user.phoneNumber}) at ${pickupLocation.name} and dropping off at ${dropoffLocation.name}. ` +
+    `Picking up ${user.firstName} ${user.lastName} (${user.phoneNumber}). ` +
     `${members.length > 0 ? `Also picking up ${members.map((m) => `${m.firstName} ${m.lastName}${m.phoneNumber ? ` (${m.phoneNumber})` : ""}`).join(", ")}.\n` : ""}Submitted at ${new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })}.`;
 
   const res = await retry<Samsara.RoutesCreateRouteResponseBody>(
     async () =>
       await samsaraClient.routes.createRoute({
         name: routeName,
-        notes: routeNotes,
         recomputeScheduledTimes: false,
         settings: {
           routeCompletionCondition: "departLastStop",
@@ -97,6 +97,7 @@ const createRoute = async ({
               address: pickupLocation.address,
               radiusMeters: 100,
             },
+            notes: routeNotes,
           },
           {
             name: dropoffLocation.name,
@@ -146,6 +147,14 @@ const createRoute = async ({
     .values({
       samsaraID: data.id,
       userID: user.id,
+      userInfoSnapshot: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
+        requiresAssistance: user.requiresAssistance,
+        eid: user.eid,
+        userType: user.userType,
+      },
       members: members,
       pickupLocationID: pickupLocation.id,
       dropoffLocationID: dropoffLocation.id,
@@ -206,9 +215,7 @@ const cancelRide = async (ride: Ride, user: User) => {
       await samsaraClient.routes.patchRoute({
         id: ride.samsaraID,
         name: newName,
-        // @ts-expect-error should be null to remove vehicleId
         vehicleId: null,
-        // @ts-expect-error should be null to remove driverId
         driverId: null,
         stops: [
           {
@@ -257,9 +264,7 @@ const missRide = async (ride: Ride, user: User) => {
       await samsaraClient.routes.patchRoute({
         id: ride.samsaraID,
         name: newName,
-        // @ts-expect-error should be null to remove vehicleId
         vehicleId: null,
-        // @ts-expect-error should be null to remove driverId
         driverId: null,
         stops: [
           {
@@ -282,6 +287,16 @@ const getVehicleFromDriver = async (driverID: string) => {
         filterBy: "drivers",
         driverIds: driverID,
         assignmentType: "HOS",
+      }),
+  );
+  return res;
+};
+
+const getAssetFromDriver = async (driverID: string) => {
+  const res = await retry(
+    async () =>
+      await samsaraClient.betaApIs.listAssetAssignments({
+        assigneeIds: [driverID],
       }),
   );
   return res;
@@ -315,6 +330,7 @@ export {
   createRoute,
   fetchCurrentRoutes,
   getAsset,
+  getAssetFromDriver,
   getAssetLocations,
   getCurrentWaitTime,
   getDriverFromVehicle,

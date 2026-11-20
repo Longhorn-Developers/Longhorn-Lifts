@@ -3,7 +3,27 @@
     "version": ">= 0.34.0"
   },
   "build": {
-    "production": {}
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "credentialsSource": "local",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "credentialsSource": "local",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview"
+      }
+    },
+    "production": {
+      "credentialsSource": "local",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
+    }
   },
   "submit": {
     "production": {

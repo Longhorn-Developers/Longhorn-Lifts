@@ -3,8 +3,9 @@ import { sql } from "drizzle-orm";
 import { index, int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { v7 } from "uuid";
 
+import { drivers } from "./drivers";
 import { locations } from "./locations";
-import { users } from "./users";
+import { UserInfo, users } from "./users";
 import { vehicles } from "./vehicles";
 
 const stopStates: [string, ...string[]] = [
@@ -17,6 +18,7 @@ const stopStates: [string, ...string[]] = [
 ];
 
 export const cancellationReasons: [string, ...string[]] = [
+  "I didn't need the ride anymore",
   "My ride never came",
   "The estimated wait was too long",
   "Weather improved",
@@ -34,6 +36,9 @@ export const rides = sqliteTable(
     samsaraID: text("samsara_id").unique().notNull(),
     userID: text("user_id")
       .references(() => users.id)
+      .notNull(),
+    userInfoSnapshot: text("user_info_snapshot", { mode: "json" })
+      .$type<UserInfo>()
       .notNull(),
     members: text("members", { mode: "json" })
       .$type<GroupRideMember[]>()
@@ -60,6 +65,7 @@ export const rides = sqliteTable(
       .default(sql`(unixepoch())`)
       .notNull(),
     vehicleID: text("vehicle_id").references(() => vehicles.samsaraID),
+    driverID: text("driver_id").references(() => drivers.samsaraID),
     numPickedUp: int("num_picked_up"),
     shareCode: text("share_code"),
     cancelledTime: text("cancelled_time"),

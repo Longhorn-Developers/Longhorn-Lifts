@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { ExpoPushTicket } from "expo-server-sdk";
 
 import { getDBInWorker } from "../db";
+import { drivers } from "../db/schema/drivers";
 import { Ride, rides } from "../db/schema/rides";
 import { users } from "../db/schema/users";
 import { Vehicle, vehicles } from "../db/schema/vehicles";
@@ -26,6 +27,7 @@ import {
 import {
   fetchCurrentRoutes,
   getAsset,
+  getAssetFromDriver,
   getAssetLocations,
   getFormSubmission,
   getRouteUpdates,
@@ -416,7 +418,33 @@ export class RideInfoStream extends DurableObject<CloudflareEnv> {
                   vehicleAssignment.data.length > 0
                 ) {
                   vehicleID = vehicleAssignment.data[0].vehicle.id;
+                } else {
+                  // they might be assigned to equipment
+                  const assetAssignment = await getAssetFromDriver(driverID);
+                  if (assetAssignment.data && assetAssignment.data.length > 0) {
+                    vehicleID = assetAssignment.data[0].asset.id;
+                  }
                 }
+
+                const driverName = ride.route.driver?.name ?? "";
+                await getDBInWorker(this.env)
+                  .insert(drivers)
+                  .values({
+                    samsaraID: driverID,
+                    name: driverName,
+                  })
+                  .onConflictDoUpdate({
+                    target: drivers.samsaraID,
+                    set: {
+                      name: driverName,
+                    },
+                  });
+                await getDBInWorker(this.env)
+                  .update(rides)
+                  .set({
+                    driverID: driverID,
+                  })
+                  .where(eq(rides.samsaraID, ride.route.id));
               }
               if (vehicleID) {
                 // get agnostic information about the asset, and then handle

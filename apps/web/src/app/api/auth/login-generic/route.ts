@@ -53,5 +53,5 @@ export async function POST(request: NextRequest) {
   // TODO: send text
   console.log(code);
 
-  return NextResponse.json({ message: "Verification code sent. " });
+  return NextResponse.json({ message: "Verification code sent. ", code });
 }

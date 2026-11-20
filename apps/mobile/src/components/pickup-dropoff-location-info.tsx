@@ -24,7 +24,7 @@ const PickupDropoffLocationInfo = ({
           </View>
         </View>
         <View className="flex-1 flex-col gap-1">
-          <FontText className="font-medium text-base">
+          <FontText className="text-lg font-medium">
             {pickupLocation?.name}
           </FontText>
           <FontText className="text-lg color-[#333F48]">
@@ -39,7 +39,7 @@ const PickupDropoffLocationInfo = ({
           </View>
         </View>
         <View className="flex-1 flex-col gap-1">
-          <FontText className="font-medium text-base">
+          <FontText className="font-medium text-lg">
             {dropoffLocation?.name}
           </FontText>
           <FontText className="text-lg color-[#333F48]">

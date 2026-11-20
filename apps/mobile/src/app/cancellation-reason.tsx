@@ -9,8 +9,8 @@ import FontText from "@/src/components/font-text";
 import LargeButton from "@/src/components/large-button";
 import RadioButton from "@/src/components/radio-button";
 
-import { getErrorMessage, handleNetworkFailure } from "../client";
 import { api, ok } from "../client/session";
+import { getErrorMessage, handleNetworkFailure } from "../client/utils";
 import TextInputField from "../components/text-input-field";
 import { useToastContext } from "../utils/context/toast-context";
 
@@ -25,6 +25,7 @@ const CancellationReason = () => {
   const [extraText, setExtraText] = useState<string>("");
 
   const cancellationReasons: [string, ...string[]] = [
+    "I didn't need the ride anymore",
     "My ride never came",
     "The estimated wait was too long",
     "Weather improved",
@@ -124,7 +125,7 @@ const CancellationReason = () => {
         onPress={submit}
         disabled={
           selectedOption === null ||
-          (selectedOption === "Other" && extraText.length <= 5) ||
+          (selectedOption === "Other" && extraText.length < 1) ||
           submitting
         }
       />

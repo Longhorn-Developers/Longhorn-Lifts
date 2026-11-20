@@ -13,8 +13,8 @@ import {
 import { useEffect, useState } from "react";
 import { Linking, ScrollView, TouchableOpacity, View } from "react-native";
 
-import { getErrorMessage } from "@/src/client";
 import { api, ok } from "@/src/client/session";
+import { getErrorMessage } from "@/src/client/utils";
 import DropdownSelect from "@/src/components/dropdown-select";
 import EditProfileTextInput from "@/src/components/edit-profile-text-input";
 import FontText from "@/src/components/font-text";
@@ -306,11 +306,16 @@ const Profile = () => {
                       </TouchableOpacity>
                       <View className="border-b border-slate-200 w-full" />
                     </View>
-                    <View className="pb-2 pt-6 w-full mb-safe">
+                    <View className="pt-6 w-full mb-safe flex-col gap-4">
                       <OutlineButton
                         title="Log Out"
                         onPress={() => logOut(pushToken ?? undefined)}
                       />
+                      <FontText className="text-sm text-center color-slate-400">
+                        made with ♡ from the Longhorn Lifts team at Longhorn
+                        Developers{"\n"}
+                        in collaboration with PTS
+                      </FontText>
                     </View>
                   </View>
                 )}

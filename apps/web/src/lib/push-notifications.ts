@@ -2,11 +2,6 @@ import InProgressRideState from "@sure-walk/utils/types/in-progress-ride-state";
 import Location from "@sure-walk/utils/types/location";
 import VehicleInfoShort from "@sure-walk/utils/types/vehicle-info-short";
 import {
-  WorkflowEntrypoint,
-  WorkflowEvent,
-  WorkflowStep,
-} from "cloudflare:workers";
-import {
   ExpoPushMessage,
   ExpoPushReceipt,
   ExpoPushTicket,
@@ -373,15 +368,3 @@ export const sendRideFeedbackNotification = async ({
 
   return sendMessages(messages);
 };
-
-export class PushReceiptsWorkflow extends WorkflowEntrypoint<CloudflareEnv> {
-  async run(event: WorkflowEvent<unknown>, step: WorkflowStep) {
-    if (event.schedule || (event.payload as { schedule?: boolean }).schedule) {
-      await step.do("fetch-push-receipts", async () => {
-        const doID = this.env.RIDE_INFO_STREAM.idFromName("global");
-        const stub = this.env.RIDE_INFO_STREAM.get(doID);
-        await stub.fetchPushReceipts();
-      });
-    }
-  }
-}

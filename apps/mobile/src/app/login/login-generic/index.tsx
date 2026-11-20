@@ -2,9 +2,9 @@ import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Platform, View } from "react-native";
 
-import { getErrorMessage, handleNetworkFailure } from "@/src/client";
 import { loginGeneric } from "@/src/client/auth";
 import { ok } from "@/src/client/session";
+import { getErrorMessage, handleNetworkFailure } from "@/src/client/utils";
 import FontText from "@/src/components/font-text";
 import LargeButton from "@/src/components/large-button";
 import TextInputField from "@/src/components/text-input-field";
@@ -42,6 +42,12 @@ const Index = () => {
         });
         return;
       }
+
+      setToast({
+        title: "Code",
+        description: response.data.code ?? "code",
+        onDismiss: () => setToast(null),
+      });
 
       router.navigate("/login/login-generic/confirm");
     } catch (error) {

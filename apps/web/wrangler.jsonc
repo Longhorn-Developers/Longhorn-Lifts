@@ -35,12 +35,31 @@
       "new_sqlite_classes": ["RideInfoStream"],
     },
   ],
-  "workflows": [
-    {
-      "name": "push-receipts-workflow",
-      "binding": "PUSH_RECEIPTS_WORKFLOW",
-      "class_name": "PushReceiptsWorkflow",
-      "schedules": ["15 * * * *"],
+  "triggers": {
+    "crons": ["15 * * * *"],
+  },
+  "vars": {
+    "ENV": "production",
+  },
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "LIFTS_DB",
+        "database_name": "lifts-preview-db",
+        "database_id": "7c946999-66c3-484b-b00b-081bd9d7ff20",
+        "migrations_dir": "./drizzle",
+      },
+    ],
+    "durable_objects": {
+      "bindings": [
+        {
+          "name": "RIDE_INFO_STREAM",
+          "class_name": "RideInfoStream",
+        },
+      ],
     },
-  ],
+    "vars": {
+      "ENV": "preview",
+    },
+  },
 }

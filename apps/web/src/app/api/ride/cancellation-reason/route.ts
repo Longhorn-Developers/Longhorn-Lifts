@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (cancellationReason === "Other" && (cancellationExtra ?? "").length <= 5) {
+  if (cancellationReason === "Other" && (cancellationExtra ?? "").length < 1) {
     return NextResponse.json(
       {
         message: "Provide a cancellation message.",

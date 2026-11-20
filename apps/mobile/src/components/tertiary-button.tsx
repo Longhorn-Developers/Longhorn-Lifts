@@ -6,16 +6,22 @@ const TertiaryButton = ({
   title,
   icon,
   onPress,
+  disabled = false,
 }: {
   title: string;
   icon: React.ReactNode;
   onPress: () => void;
+  disabled?: boolean;
 }) => {
   return (
-    <TouchableOpacity onPress={onPress}>
-      <View className="flex-row gap-1 p-3 items-center justify-center bg-slate-50 rounded-[32px] border border-slate-200">
+    <TouchableOpacity onPress={onPress} disabled={disabled}>
+      <View
+        className={`flex-row gap-1 p-3 items-center justify-center rounded-[32px] border ${disabled ? "border-slate-400 bg-slate-200" : "border-slate-200 bg-slate-50"}`}
+      >
         {icon}
-        <FontText className="font-medium">{title}</FontText>
+        <FontText className={`font-medium ${disabled ? "text-slate-400" : ""}`}>
+          {title}
+        </FontText>
       </View>
     </TouchableOpacity>
   );

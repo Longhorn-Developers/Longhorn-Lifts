@@ -13,6 +13,7 @@ import {
   pickupBoundaryPolygons,
 } from "@sure-walk/utils/boundary-info";
 import { getMatchingDropoffLocations } from "@sure-walk/utils/dropoff-locations";
+import { dstActive, isInHours } from "@sure-walk/utils/hours-handling";
 import {
   getMatchingPickupLocations,
   sortFavoriteLocations,
@@ -54,6 +55,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 
+import { environment } from "@/src/client/auth";
 import { api } from "@/src/client/session";
 import CheckButton from "@/src/components/check-button";
 import FontText from "@/src/components/font-text";
@@ -64,6 +66,7 @@ import TertiaryButton from "@/src/components/tertiary-button";
 import TextInputField from "@/src/components/text-input-field";
 import {
   gray900,
+  slate400,
   slate700,
   slate900,
   UTBluebonnet,
@@ -104,16 +107,6 @@ const Home = () => {
   const destinationRef = useRef<TextInput>(null);
   const rideCodeSheetRef = useRef<BottomSheetModal>(null);
 
-  const snap0 = useSharedValue<number>(92); // minimum bottom sheet snapping height
-  const snap1 = useSharedValue<number>(290); // medium bottom sheet snapping height
-  const snapPoints = useDerivedValue(
-    () => [
-      snap0.value + 24, // compensate for screen safe area
-      snap1.value + snap0.value,
-      ...(!currentRide ? ["80.5%"] : []), // maximum sheet snapping height
-    ],
-    [snap0, snap1, currentRide],
-  );
   const [code, setCode] = useState<string>("");
   const [viewRideDisabled, setViewRideDisabled] = useState<boolean>(false);
   const [snapIndex, setSnapIndex] = useState<number>(1);
@@ -134,6 +127,8 @@ const Home = () => {
   const [focusedInput, setFocusedInput] = useState<"pickup" | "dropoff">(
     "pickup",
   );
+  const [firstLocationUpdate, setFirstLocationUpdate] = useState<boolean>(true);
+  const [edited, setEdited] = useState<boolean>(false);
   const [, setIsInputFocused] = useState<boolean>(false);
   const [pickupList, setPickupList] = useState<LocationType[]>([]);
   const [dropoffList, setDropoffList] = useState<LocationType[]>([]);
@@ -145,6 +140,20 @@ const Home = () => {
   );
   const [favoriteLocations, setFavoriteLocations] = useState<LocationType[]>(
     [],
+  );
+  const [isOpen, setIsOpen] = useState<boolean>(
+    environment !== "production" ? true : isInHours(),
+  );
+
+  const snap0 = useSharedValue<number>(92); // minimum bottom sheet snapping height
+  const snap1 = useSharedValue<number>(290); // medium bottom sheet snapping height
+  const snapPoints = useDerivedValue(
+    () => [
+      snap0.value + 24, // compensate for screen safe area
+      snap1.value + snap0.value,
+      ...(!currentRide && isOpen ? ["80.5%"] : []), // maximum sheet snapping height
+    ],
+    [snap0, snap1, currentRide, isOpen],
   );
 
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
@@ -158,6 +167,66 @@ const Home = () => {
         longitudeDelta: 0.02,
       });
     }, 1000);
+  };
+
+  const getLocation = async () => {
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.BestForNavigation,
+    });
+    setLocation(location);
+
+    if (firstLocationUpdate) {
+      centerMapOnLocation(location);
+      setFirstLocationUpdate(false);
+    }
+
+    const userLat = location.coords.latitude;
+    const userLon = location.coords.longitude;
+    console.log("[Location] GPS coordinates:", userLat, userLon);
+
+    const haversine = (
+      lat1: number,
+      lon1: number,
+      lat2: number,
+      lon2: number,
+    ) => {
+      const toRad = (v: number) => (v * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    const allPickupLocations = getMatchingPickupLocations("");
+    if (allPickupLocations.length > 0) {
+      const nearest = allPickupLocations.reduce((closest, loc) =>
+        haversine(userLat, userLon, loc.lat, loc.lon) <
+        haversine(userLat, userLon, closest.lat, closest.lon)
+          ? loc
+          : closest,
+      );
+      const { latitude, longitude } = location.coords;
+      const dist = Math.hypot(latitude - nearest.lat, longitude - nearest.lon);
+      if (dist > 0.001) {
+        setUserLocationLabel("Off-Campus");
+        return;
+      }
+      console.log(
+        "[Location] Selected nearest:",
+        nearest.name,
+        `(id=${nearest.id})`,
+      );
+      setUserLocationLabel(nearest.name);
+      if (!edited) {
+        // if the user has started editing ignore this
+        setPickupLocationText(nearest.name);
+        setStartAddress(nearest.address);
+        setPickupLocation(nearest);
+        setFocusedInput("dropoff");
+      }
+    }
   };
 
   const requestLocationPermissions = async () => {
@@ -183,64 +252,7 @@ const Home = () => {
       console.error("location denied");
       return;
     } else {
-      let location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
-      });
-      setLocation(location);
-      centerMapOnLocation(location);
-
-      const userLat = location.coords.latitude;
-      const userLon = location.coords.longitude;
-      console.log("[Location] GPS coordinates:", userLat, userLon);
-
-      const haversine = (
-        lat1: number,
-        lon1: number,
-        lat2: number,
-        lon2: number,
-      ) => {
-        const toRad = (v: number) => (v * Math.PI) / 180;
-        const dLat = toRad(lat2 - lat1);
-        const dLon = toRad(lon2 - lon1);
-        const a =
-          Math.sin(dLat / 2) ** 2 +
-          Math.cos(toRad(lat1)) *
-            Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) ** 2;
-        return Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      };
-
-      const allPickupLocations = getMatchingPickupLocations("");
-      if (allPickupLocations.length > 0) {
-        const nearest = allPickupLocations.reduce((closest, loc) =>
-          haversine(userLat, userLon, loc.lat, loc.lon) <
-          haversine(userLat, userLon, closest.lat, closest.lon)
-            ? loc
-            : closest,
-        );
-        const { latitude, longitude } = location.coords;
-        const dist = Math.hypot(
-          latitude - nearest.lat,
-          longitude - nearest.lon,
-        );
-        if (dist > 0.001) {
-          setUserLocationLabel("Off-Campus");
-          return;
-        }
-        console.log(
-          "[Location] Selected nearest:",
-          nearest.name,
-          `(id=${nearest.id})`,
-        );
-        if (pickupLocationText === "") {
-          // if the user has started editing ignore this
-          setPickupLocationText(nearest.name);
-          setStartAddress(nearest.address);
-          setPickupLocation(nearest);
-          setUserLocationLabel(nearest.name);
-          setFocusedInput("dropoff");
-        }
-      }
+      return setInterval(getLocation, 1000 * 20);
     }
   };
 
@@ -288,18 +300,29 @@ const Home = () => {
     }
   };
 
+  const checkHours = () => {
+    setIsOpen(environment !== "production" ? true : isInHours());
+  };
+
   useEffect(() => {
+    let locationInterval: NodeJS.Timeout | undefined;
+
     loadFavorites();
     registerForPushNotificationsAsync();
-    requestLocationPermissions();
+    requestLocationPermissions().then((v) => (locationInterval = v));
     const responseListener =
       Notifications.addNotificationResponseReceivedListener(
         handleMissedRideNotificationResponse,
       );
     const interval = setInterval(fetchCurrentRide, 30 * 1000);
+    const hoursInterval = setInterval(checkHours, 10 * 1000);
 
     return () => {
       clearInterval(interval);
+      clearInterval(hoursInterval);
+      if (locationInterval) {
+        clearInterval(locationInterval);
+      }
       responseListener.remove();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -368,6 +391,7 @@ const Home = () => {
   };
 
   const clickedPickupLocation = (location: LocationType) => () => {
+    setEdited(true);
     setPickupLocationText(location.name);
     setStartAddress(location.address);
     setPickupLocation(location);
@@ -381,6 +405,7 @@ const Home = () => {
   };
 
   const clickedDropoffLocation = (location: LocationType) => () => {
+    setEdited(true);
     setDropoffText(location.name);
     setDropoffAddress(location.address);
     setDropoffLocation(location);
@@ -404,12 +429,14 @@ const Home = () => {
 
   const displayedList =
     focusedInput === "pickup" && pickupLocationText.trim().length >= 1
-      ? pickupList
+      ? pickupList.filter((loc) => loc.id !== dropoffLocation?.id)
       : focusedInput === "dropoff" && dropoffText.trim().length >= 1
-        ? dropoffList
+        ? dropoffList.filter((loc) => loc.id !== pickupLocation?.id)
         : focusedInput === "dropoff"
-          ? favoriteLocations
-          : favoriteLocations.filter((fav) => fav.type === "pickup");
+          ? favoriteLocations.filter((loc) => loc.id !== pickupLocation?.id)
+          : favoriteLocations.filter(
+              (fav) => fav.type === "pickup" && fav.id !== dropoffLocation?.id,
+            );
 
   return (
     <View className="bg-white flex-1 flex-col items-center pt-safe">
@@ -575,8 +602,14 @@ const Home = () => {
                 {!currentRide && (
                   <TertiaryButton
                     title={`${members.length === 0 ? "Add" : members.length + 1} Riders`}
-                    icon={<UserCirclePlusIcon color={slate700} size="24" />}
+                    icon={
+                      <UserCirclePlusIcon
+                        color={isOpen ? slate700 : slate400}
+                        size="24"
+                      />
+                    }
                     onPress={() => router.navigate("/home/group-ride")}
+                    disabled={!isOpen}
                   />
                 )}
               </View>
@@ -609,7 +642,7 @@ const Home = () => {
         <View className="flex-col mb-[-24px]" onLayout={calcMediumSheetHeight}>
           <View className="flex-col bg-white pt-4 px-5">
             {/* location selector */}
-            {!currentRide && (
+            {!currentRide && isOpen && (
               <View className="flex-col rounded-lg">
                 <Pressable
                   className={`${focusedInput === "pickup" ? "bg-slate-100" : "bg-slate-50"} transition-colors flex-row p-4 gap-4 items-center rounded-t-2xl border border-slate-200`}
@@ -628,6 +661,7 @@ const Home = () => {
                     <TextInput
                       ref={startLocationRef}
                       onFocus={() => {
+                        setEdited(true);
                         setFocusedInput("pickup");
                         setIsInputFocused(true);
                         snapIndex !== 2 && sheetRef.current?.expand();
@@ -645,6 +679,8 @@ const Home = () => {
                       }}
                       value={pickupLocationText}
                       style={_style}
+                      autoCorrect={false}
+                      spellCheck={false}
                     />
                     <FontText className="text-lg color-[#333F48]">
                       {startLocationAddress}
@@ -668,6 +704,7 @@ const Home = () => {
                     <TextInput
                       ref={destinationRef}
                       onFocus={() => {
+                        setEdited(true);
                         setFocusedInput("dropoff");
                         setIsInputFocused(true);
                         snapIndex !== 2 && sheetRef.current?.expand();
@@ -685,6 +722,8 @@ const Home = () => {
                       }}
                       value={dropoffText}
                       style={_style}
+                      autoCorrect={false}
+                      spellCheck={false}
                     />
                     <FontText className="text-lg color-[#333F48]">
                       {dropoffAddress}
@@ -725,6 +764,27 @@ const Home = () => {
                       </FontText>
                     </TouchableOpacity>
                   )}
+                </View>
+              </View>
+            )}
+
+            {/* closed banner */}
+            {!currentRide && !isOpen && (
+              <View className="mb-safe">
+                <View className="px-5 py-3 bg-[#B91C1C33] border-x border-t border-slate-200 rounded-t-3xl">
+                  <FontText className="text-lg font-semibold text-red-700">
+                    Sure Walk is Closed
+                  </FontText>
+                </View>
+                <View className="px-5 py-4 bg-50 border-x border-b border-slate-200 rounded-b-3xl flex-col gap-2">
+                  <FontText className="text-lg font-semibold">
+                    Hours of Operation:{" "}
+                    <FontText className="font-regular">{`${dstActive() ? "8" : "7"}pm - 2am`}</FontText>
+                  </FontText>
+                  <FontText className="text-md font-medium text-slate-500">
+                    *Sure Walk doesn't operate during holidays and campus
+                    closures
+                  </FontText>
                 </View>
               </View>
             )}
@@ -789,7 +849,7 @@ const Home = () => {
         </View>
 
         {/* search results */}
-        {!currentRide && (
+        {!currentRide && isOpen && (
           <BottomSheetFlatList
             overScrollMode={"always"}
             scrollEnabled={

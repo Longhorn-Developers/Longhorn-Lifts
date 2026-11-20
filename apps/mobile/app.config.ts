@@ -105,6 +105,7 @@ const config = ({ _config }: { _config: ExpoConfig }) => ({
     "expo-notifications",
     "./plugins/withMapsSDKSecretsPlugin.ts",
     "./plugins/withSecretsManifest.ts",
+    "expo-asset",
   ],
   experiments: {
     typedRoutes: true,

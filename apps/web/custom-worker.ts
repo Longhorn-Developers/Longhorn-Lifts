@@ -20,7 +20,11 @@ export default {
     // otherwise just use the regular Next.js worker
     return handler.fetch(request, env, ctx);
   },
+  async scheduled(_controller: ScheduledController, env: CloudflareEnv) {
+    const doID = env.RIDE_INFO_STREAM.idFromName("global");
+    const stub = env.RIDE_INFO_STREAM.get(doID);
+    await stub.fetchPushReceipts();
+  },
 } satisfies ExportedHandler<CloudflareEnv>;
 
-export { PushReceiptsWorkflow } from "./src/lib/push-notifications";
 export { RideInfoStream } from "./src/lib/ride-info-stream";
