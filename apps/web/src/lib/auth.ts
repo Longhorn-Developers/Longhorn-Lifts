@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
@@ -12,6 +13,14 @@ export const REFRESH_TOKEN_TTL = "30d";
 
 export const hashString = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");
+};
+
+export const hashPassword = async (password: string) => {
+  return await bcrypt.hash(password, 10);
+};
+
+export const verifyPassword = async (password: string, hash: string) => {
+  return await bcrypt.compare(password, hash);
 };
 
 export const generateJti = () => {
