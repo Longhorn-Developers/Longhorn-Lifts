@@ -66,14 +66,13 @@ const createRoute = async ({
   const routeName = getRideName(user, members);
   // display all relevant information for the leader and group ride members
   const routeNotes =
-    `Picking up ${user.firstName} ${user.lastName} (${user.phoneNumber}) at ${pickupLocation.name} and dropping off at ${dropoffLocation.name}. ` +
+    `Picking up ${user.firstName} ${user.lastName} (${user.phoneNumber}). ` +
     `${members.length > 0 ? `Also picking up ${members.map((m) => `${m.firstName} ${m.lastName}${m.phoneNumber ? ` (${m.phoneNumber})` : ""}`).join(", ")}.\n` : ""}Submitted at ${new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })}.`;
 
   const res = await retry<Samsara.RoutesCreateRouteResponseBody>(
     async () =>
       await samsaraClient.routes.createRoute({
         name: routeName,
-        notes: routeNotes,
         recomputeScheduledTimes: false,
         settings: {
           routeCompletionCondition: "departLastStop",
@@ -98,6 +97,7 @@ const createRoute = async ({
               address: pickupLocation.address,
               radiusMeters: 100,
             },
+            notes: routeNotes,
           },
           {
             name: dropoffLocation.name,
